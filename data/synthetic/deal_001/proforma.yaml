@@ -1,0 +1,22 @@
+property_name: Perez Terrace Apartments
+asking_price: '12750000.00'
+unit_count: 71
+vacancy_rate: '0.0463'
+mgmt_fee_pct: '0.036'
+source_note: Synthetic OM p.14, 'Pro Forma Year 1' table
+lines:
+  GROSS_POTENTIAL_RENT: '1343034.95'
+  LOSS_TO_LEASE: '-65597.13'
+  VACANCY_LOSS: '-62182.52'
+  OTHER_INCOME: '38114.23'
+  REAL_ESTATE_TAXES: '119754.64'
+  INSURANCE: '48754.71'
+  UTILITIES: '96977.09'
+  REPAIRS_MAINTENANCE: '51888.50'
+  TURNOVER: '27109.04'
+  CONTRACT_SERVICES: '16031.14'
+  PAYROLL: '106735.01'
+  MANAGEMENT_FEE: '45121.30'
+  GENERAL_ADMIN: '27844.78'
+  MARKETING: '11811.57'
+  CAPEX_RESERVES: '19757.70'

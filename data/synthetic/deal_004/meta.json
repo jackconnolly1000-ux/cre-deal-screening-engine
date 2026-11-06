@@ -1,0 +1,18 @@
+{
+  "deal_id": "deal_004",
+  "deal_seed": 11,
+  "property_name": "Chavez Terrace Apartments",
+  "rr_format": "pdf_text",
+  "rr_layout": "rr_classic",
+  "scanned": false,
+  "seed": 7,
+  "split": "dev",
+  "t12_format": "pdf_text",
+  "t12_layout": "t12_grid",
+  "traps": [
+    "TRAP_RR_EXPIRED_LEASE",
+    "TRAP_RR_HIDDEN_CONCESSION",
+    "TRAP_T12_FOOTING",
+    "TRAP_PF_TAX_DROP"
+  ]
+}

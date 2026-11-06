@@ -1,0 +1,17 @@
+{
+  "deal_id": "deal_005",
+  "deal_seed": 12,
+  "property_name": "Wells Residences Apartments",
+  "rr_format": "pdf_text",
+  "rr_layout": "rr_classic",
+  "scanned": false,
+  "seed": 7,
+  "split": "dev",
+  "t12_format": "pdf_text",
+  "t12_layout": "t12_grid",
+  "traps": [
+    "TRAP_X_RENT_PUSH",
+    "TRAP_T12_ONE_TIME_INCOME",
+    "TRAP_RR_DUP_UNIT"
+  ]
+}

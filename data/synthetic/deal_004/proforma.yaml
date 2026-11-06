@@ -1,0 +1,22 @@
+property_name: Chavez Terrace Apartments
+asking_price: '14810000.00'
+unit_count: 95
+vacancy_rate: '0.0642'
+mgmt_fee_pct: '0.046'
+source_note: Synthetic OM p.14, 'Pro Forma Year 1' table
+lines:
+  GROSS_POTENTIAL_RENT: '1889513.12'
+  LOSS_TO_LEASE: '-84538.15'
+  VACANCY_LOSS: '-121306.74'
+  OTHER_INCOME: '67300.30'
+  REAL_ESTATE_TAXES: '171039.62'
+  INSURANCE: '62184.53'
+  UTILITIES: '94574.52'
+  REPAIRS_MAINTENANCE: '69956.64'
+  TURNOVER: '36924.37'
+  CONTRACT_SERVICES: '24190.76'
+  PAYROLL: '151917.10'
+  MANAGEMENT_FEE: '80544.55'
+  GENERAL_ADMIN: '29323.90'
+  MARKETING: '8225.82'
+  CAPEX_RESERVES: '24370.92'

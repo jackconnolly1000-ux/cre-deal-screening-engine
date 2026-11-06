@@ -1,0 +1,22 @@
+property_name: Duncan Residences Apartments
+asking_price: '3240000.00'
+unit_count: 28
+vacancy_rate: '0.0775'
+mgmt_fee_pct: '0.048'
+source_note: Synthetic OM p.14, 'Pro Forma Year 1' table
+lines:
+  GROSS_POTENTIAL_RENT: '543228.00'
+  LOSS_TO_LEASE: '-48948.00'
+  VACANCY_LOSS: '-42100.17'
+  OTHER_INCOME: '12423.80'
+  REAL_ESTATE_TAXES: '60448.53'
+  INSURANCE: '24534.33'
+  UTILITIES: '25461.07'
+  REPAIRS_MAINTENANCE: '28034.53'
+  TURNOVER: '9580.43'
+  CONTRACT_SERVICES: '8661.07'
+  PAYROLL: '50872.72'
+  MANAGEMENT_FEE: '22300.97'
+  GENERAL_ADMIN: '8840.42'
+  MARKETING: '2367.31'
+  CAPEX_RESERVES: '10844.64'

@@ -1,0 +1,22 @@
+property_name: Wells Residences Apartments
+asking_price: '13530000.00'
+unit_count: 85
+vacancy_rate: '0.0471'
+mgmt_fee_pct: '0.042'
+source_note: Synthetic OM p.14, 'Pro Forma Year 1' table
+lines:
+  GROSS_POTENTIAL_RENT: '1578852.00'
+  LOSS_TO_LEASE: '-71916.00'
+  VACANCY_LOSS: '-74363.93'
+  OTHER_INCOME: '41665.65'
+  REAL_ESTATE_TAXES: '190517.90'
+  INSURANCE: '53193.77'
+  UTILITIES: '84319.86'
+  REPAIRS_MAINTENANCE: '44941.91'
+  TURNOVER: '32228.31'
+  CONTRACT_SERVICES: '21891.94'
+  PAYROLL: '152846.17'
+  MANAGEMENT_FEE: '61917.98'
+  GENERAL_ADMIN: '33811.85'
+  MARKETING: '13640.91'
+  CAPEX_RESERVES: '31452.21'

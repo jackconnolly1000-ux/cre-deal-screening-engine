@@ -1,0 +1,17 @@
+{
+  "deal_id": "deal_003",
+  "deal_seed": 10,
+  "property_name": "Duncan Residences Apartments",
+  "rr_format": "pdf_text",
+  "rr_layout": "rr_classic",
+  "scanned": false,
+  "seed": 7,
+  "split": "dev",
+  "t12_format": "pdf_text",
+  "t12_layout": "t12_grid",
+  "traps": [
+    "TRAP_RR_ZERO_RENT",
+    "TRAP_T12_SPIKE",
+    "TRAP_RR_FOOTING"
+  ]
+}
