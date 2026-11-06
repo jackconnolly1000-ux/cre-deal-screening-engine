@@ -9,8 +9,8 @@ A multifamily deal-screening engine: extract rent rolls and T-12s with citations
 ## Current milestone
 
 ```text
-CURRENT: M3
-DONE:    M0, M1, M2
+CURRENT: M4
+DONE:    M0, M1, M2, M3
 ```
 
 The owner updates this block. Work only on the CURRENT milestone. If a task would touch a later milestone's files, stop and ask.
