@@ -1,0 +1,26 @@
+unit_count: {min: 24, max: 96}
+unit_mix:                       # share of units, must sum to 1
+  studio: 0.10
+  "1x1": 0.50
+  "2x1": 0.15
+  "2x2": 0.20
+  "3x2": 0.05
+sq_ft: {studio: [450, 550], "1x1": [650, 800], "2x1": [850, 950], "2x2": [950, 1150], "3x2": [1200, 1400]}
+market_rent_per_sf: {min: "1.45", max: "2.10"}
+inplace_vs_market: {min: "0.90", max: "1.00"}   # per unit
+rent_noise_within_type: "0.08"                  # keeps base deals below rr_rent_outlier threshold
+physical_vacancy: {min: "0.04", max: "0.09"}
+model_or_employee_units: {max: 1}
+other_income_per_unit_month: {min: "25", max: "75"}
+opex_per_unit_year:             # ranges; owner calibrates
+  REAL_ESTATE_TAXES: ["1400", "2600"]
+  INSURANCE: ["550", "900"]
+  UTILITIES: ["900", "1600"]
+  REPAIRS_MAINTENANCE: ["500", "900"]
+  TURNOVER: ["250", "450"]
+  CONTRACT_SERVICES: ["200", "400"]
+  PAYROLL: ["1200", "2000"]
+  GENERAL_ADMIN: ["200", "400"]
+  MARKETING: ["80", "200"]
+mgmt_fee_pct_of_egi: {min: "0.03", max: "0.05"}
+capex_per_unit_year: ["200", "400"]
