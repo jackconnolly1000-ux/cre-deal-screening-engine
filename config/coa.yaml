@@ -1,0 +1,119 @@
+buckets:
+  GROSS_POTENTIAL_RENT:
+    section: revenue
+    sign: positive
+    description: Rent for all units at market or scheduled rent, before any deductions.
+    synonyms: ["Gross Potential Rent", "GPR", "Potential Rent", "Gross Market Rent", "Scheduled Rent", "Market Rent"]
+  LOSS_TO_LEASE:
+    section: revenue
+    sign: negative
+    description: Gap between market rent and in-place lease rent on occupied units.
+    synonyms: ["Loss to Lease", "Loss/Gain to Lease", "Gain/Loss to Lease", "LTL"]
+  VACANCY_LOSS:
+    section: revenue
+    sign: negative
+    description: Rent lost on vacant and down units.
+    synonyms: ["Vacancy", "Vacancy Loss", "Physical Vacancy", "Vacancy & Credit Loss"]
+  CONCESSIONS:
+    section: revenue
+    sign: negative
+    description: Free rent and rent discounts given to tenants.
+    synonyms: ["Concessions", "Rent Concessions", "Free Rent", "Move-in Specials"]
+  BAD_DEBT:
+    section: revenue
+    sign: negative
+    description: Rent billed but not collected and written off.
+    synonyms: ["Bad Debt", "Bad Debt Expense", "Write-offs", "Collection Loss"]
+  UTILITY_REIMBURSEMENT:
+    section: revenue
+    sign: positive
+    description: Utility charges billed back to tenants (RUBS, submetering).
+    synonyms: ["RUBS", "Utility Reimbursement", "Water/Sewer Reimbursement", "Utility Billback"]
+  OTHER_INCOME:
+    section: revenue
+    sign: positive
+    description: Recurring fees and ancillary income such as parking, pet, laundry, late, application fees.
+    synonyms: ["Other Income", "Misc Income", "Parking Income", "Pet Fees", "Laundry Income", "Late Fees", "Application Fees"]
+  REAL_ESTATE_TAXES:
+    section: opex
+    sign: positive
+    description: Property taxes paid to the taxing authority.
+    synonyms: ["Real Estate Taxes", "R/E Taxes", "Property Taxes", "RE Tax"]
+  INSURANCE:
+    section: opex
+    sign: positive
+    description: Property and liability insurance premiums.
+    synonyms: ["Insurance", "Property Insurance", "Liability Insurance"]
+  UTILITIES:
+    section: opex
+    sign: positive
+    description: Owner-paid electric, gas, water, sewer, trash.
+    synonyms: ["Utilities", "Electric", "Gas", "Water/Sewer", "Water & Sewer", "Trash Removal"]
+  REPAIRS_MAINTENANCE:
+    section: opex
+    sign: positive
+    description: Ordinary repairs and maintenance supplies, not capital items.
+    synonyms: ["Repairs & Maintenance", "R&M", "Repairs and Maintenance", "Maintenance Supplies"]
+  TURNOVER:
+    section: opex
+    sign: positive
+    description: Make-ready costs between tenants (paint, cleaning, carpet).
+    synonyms: ["Turnover", "Make Ready", "Make-Ready", "Unit Turns", "Turn Costs"]
+  CONTRACT_SERVICES:
+    section: opex
+    sign: positive
+    description: Recurring outside contracts such as landscaping, pest control, snow removal, elevator.
+    synonyms: ["Contract Services", "Landscaping", "Pest Control", "Snow Removal", "Elevator Contract"]
+  PAYROLL:
+    section: opex
+    sign: positive
+    description: On-site staff wages, payroll taxes and benefits.
+    synonyms: ["Payroll", "Salaries", "Wages", "Payroll & Benefits", "Personnel"]
+  MANAGEMENT_FEE:
+    section: opex
+    sign: positive
+    description: Property management fee, usually a percent of collections.
+    synonyms: ["Management Fee", "Management Fees", "Property Management"]
+  GENERAL_ADMIN:
+    section: opex
+    sign: positive
+    description: Office, software, legal, accounting, licenses, bank fees.
+    synonyms: ["General & Administrative", "G&A", "Administrative", "Office Expense", "Legal & Accounting"]
+  MARKETING:
+    section: opex
+    sign: positive
+    description: Advertising and leasing promotion.
+    synonyms: ["Marketing", "Advertising", "Marketing & Advertising"]
+  CAPEX_RESERVES:
+    section: below_noi
+    sign: positive
+    description: Capital expenditures and replacement reserves. Below NOI.
+    synonyms: ["Capital Expenditures", "CapEx", "Replacement Reserves", "Reserves"]
+  NON_OPERATING:
+    section: excluded
+    sign: positive
+    description: Debt service, interest, depreciation, amortization, owner or partnership costs, income taxes.
+    synonyms: ["Debt Service", "Mortgage Interest", "Interest Expense", "Depreciation", "Amortization", "Partnership Expenses", "Asset Management Fee"]
+  UNMAPPED:
+    section: control
+    sign: positive
+    description: Not yet classified. Always blocks export until a human maps it.
+    synonyms: []
+
+nonrecurring_keywords:
+  - insurance proceeds
+  - insurance claim
+  - lease buyout
+  - lease termination fee
+  - settlement
+  - refund
+  - one-time
+  - one time
+  - non-recurring
+  - nonrecurring
+  - legal recovery
+
+subtotal_labels:
+  total_income: ["Total Income", "Effective Gross Income", "EGI", "Total Revenue", "Total Operating Income"]
+  total_expenses: ["Total Expenses", "Total Operating Expenses", "Total OpEx"]
+  noi: ["Net Operating Income", "NOI"]

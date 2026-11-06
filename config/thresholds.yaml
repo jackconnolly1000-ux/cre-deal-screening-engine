@@ -1,0 +1,38 @@
+rr_footing:
+  tolerance_usd: "1.00"              # strings so they load as Decimal
+  market_rent_severity: warn         # footing failure on market rent column
+  max_reextract_attempts: 1
+rr_zero_rent_occ:
+  occupied_like_statuses: [occupied, notice]
+rr_expired_lease:
+  occupied_like_statuses: [occupied, notice]
+  treat_missing_lease_end_as_mtm: true
+rr_concession:
+  drag_warn_pct: "0.02"              # monthly concession equiv / total in-place rent
+  default_lease_term_months: 12
+rr_rent_outlier:
+  deviation_pct: "0.25"
+  min_group_size: 3
+x_rr_vs_t3:
+  gap_warn_pct: "0.05"
+  occupied_like_statuses: [occupied, notice]
+  t3_rental_buckets: [GROSS_POTENTIAL_RENT, LOSS_TO_LEASE, VACANCY_LOSS]
+t12_footing:
+  line_tolerance_usd: "1.00"
+  subtotal_tolerance_usd: "5.00"
+t12_spike:
+  factor: "3.0"                      # month > factor x median of the line's 12 months
+  min_abs_usd: "1000.00"
+  exempt_buckets: [REAL_ESTATE_TAXES, INSURANCE]   # often paid in lumps
+  checked_sections: [opex, revenue]
+pf_tax_drop:
+  drop_pct: "0.00"                   # any decrease vs T-12 warns
+pf_ins_drop:
+  drop_pct: "0.10"
+pf_vacancy:
+  margin: "0.005"
+  vacant_like_statuses: [vacant, down]
+pf_mgmt_fee:
+  margin: "0.005"
+review:
+  override_note_min_chars: 10

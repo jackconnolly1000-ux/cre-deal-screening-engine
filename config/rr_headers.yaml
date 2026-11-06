@@ -1,0 +1,27 @@
+fuzzy_min_score: 90          # rapidfuzz token_set_ratio on normalized text
+required_fields: [unit_id, in_place_rent]
+status_or_tenant_required: true   # need a status column OR a tenant_name column
+
+fields:
+  unit_id: ["Unit", "Unit #", "Unit No", "Unit Number", "Apt", "Apt #", "Suite"]
+  unit_type: ["Unit Type", "Type", "Floor Plan", "Floorplan", "Plan"]
+  beds: ["Beds", "BR", "Bedrooms", "Bd"]
+  baths: ["Baths", "BA", "Bathrooms", "Ba"]
+  sq_ft: ["SqFt", "Sq Ft", "SF", "Square Feet", "Area", "Unit SF"]
+  status: ["Status", "Unit Status", "Occupancy", "Occ Status"]
+  tenant_name: ["Tenant", "Resident", "Tenant Name", "Resident Name", "Lessee"]
+  in_place_rent: ["Rent", "Lease Rent", "Contract Rent", "Current Rent", "In-Place Rent", "Actual Rent", "Charged Rent"]
+  market_rent: ["Market Rent", "Market", "Mkt Rent", "Mkt", "Asking Rent", "Scheduled Rent"]
+  lease_start: ["Lease Start", "Lease From", "Move In", "Move-In", "Start Date", "Lease Begin"]
+  lease_end: ["Lease End", "Lease To", "Lease Expiration", "Expiration", "End Date", "Lease Exp"]
+  concession_note: ["Concession", "Concessions", "Notes", "Comments", "Specials", "Remarks"]
+
+status_synonyms:
+  occupied: ["occupied", "occ", "o", "current", "leased", "occupied-nr"]
+  vacant: ["vacant", "vac", "v", "vacant-unrented", "vacant unrented"]
+  notice: ["notice", "ntv", "on notice", "occupied-ntv", "notice to vacate"]
+  model: ["model", "model unit"]
+  down: ["down", "offline", "non-rentable", "down unit"]
+  employee: ["employee", "staff", "courtesy officer"]
+
+vacant_tenant_markers: ["VACANT", "VACANT UNIT", "*VACANT*"]
