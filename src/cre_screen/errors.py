@@ -24,3 +24,37 @@ class PromptTooLargeError(CreScreenError):
 
 class BudgetExceededError(CreScreenError):
     """A live call would pass the per-run or lifetime spend cap."""
+
+
+class UnsupportedFileError(CreScreenError):
+    """The file extension or content type is not supported."""
+
+
+class ParseError(CreScreenError):
+    """A printed value could not be parsed."""
+
+
+class MoneyParseError(ParseError):
+    def __init__(self, text: str) -> None:
+        super().__init__(f"cannot parse money value: {text!r}")
+        self.text = text
+
+
+class DateParseError(ParseError):
+    def __init__(self, text: str) -> None:
+        super().__init__(f"cannot parse date value: {text!r}")
+        self.text = text
+
+
+class NumberParseError(ParseError):
+    def __init__(self, text: str) -> None:
+        super().__init__(f"cannot parse number value: {text!r}")
+        self.text = text
+
+
+class HeaderMapError(CreScreenError):
+    """Header mapping failed validation, even after the LLM retry."""
+
+
+class LLMUnavailableError(CreScreenError):
+    """A step needs the LLM but no client is available in this context."""
