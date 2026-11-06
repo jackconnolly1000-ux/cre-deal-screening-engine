@@ -58,3 +58,11 @@ class HeaderMapError(CreScreenError):
 
 class LLMUnavailableError(CreScreenError):
     """A step needs the LLM but no client is available in this context."""
+
+
+class ProformaError(CreScreenError):
+    """proforma.yaml is missing, malformed, or fails validation."""
+
+
+class T12ExtractError(CreScreenError):
+    """The T-12 table could not be turned into a statement."""

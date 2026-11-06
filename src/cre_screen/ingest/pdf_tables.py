@@ -10,13 +10,15 @@ import json
 import logging
 import os
 import re
+from collections.abc import Callable
+from datetime import datetime
 from itertools import pairwise
 from pathlib import Path
 from typing import Any
 
 import pdfplumber
 
-from cre_screen.config import RRHeadersConfig
+from cre_screen.config import CoaConfig, RRHeadersConfig
 from cre_screen.ingest.raw import RawCell, RawRow, RawTable, RowKind
 from cre_screen.mapping.header_mapper import match_headers, normalize_header
 
@@ -25,12 +27,20 @@ logger = logging.getLogger(__name__)
 LINE_TOLERANCE = 3.0
 PHRASE_GAP = 6.0
 MIN_HEADER_FIELDS = 2
+MIN_T12_MONTH_HEADERS = 6
 UNIT_ID_LIKE = re.compile(r"^[A-Za-z]{0,3}[-#]?\d[\w-]{0,7}$")
 SUBTOTAL_LIKE = re.compile(r"total|subtotal", re.IGNORECASE)
 FOOTNOTE_LIKE = re.compile(r"^(\*|\d+\))")
+MONTH_FORMATS = ("%b-%y", "%b %Y", "%m/%Y")
+DASHES = ("-", chr(0x2013), chr(0x2014))
+MINUS = chr(0x2212)
+NUMERIC_CELL = re.compile(rf"^[(\-{MINUS}]?\$?[\d,]*\.?\d+\)?-?$")
 
 Word = dict[str, Any]
 Bbox = tuple[float, float, float, float]
+Phrases = list[tuple[str, float, float]]
+HeaderFinder = Callable[[list[list[Word]]], tuple[int, Phrases] | None]
+Classifier = Callable[[dict[str, RawCell], list[str], bool], RowKind]
 
 
 def _group_lines(words: list[Word]) -> list[list[Word]]:
@@ -47,7 +57,7 @@ def _group_lines(words: list[Word]) -> list[list[Word]]:
     return lines
 
 
-def _merge_phrases(line: list[Word]) -> list[tuple[str, float, float]]:
+def _merge_phrases(line: list[Word]) -> Phrases:
     """Merge x-adjacent words (gap under PHRASE_GAP) into (text, x0, x1) phrases."""
     phrases: list[list[Any]] = []
     for word in line:
@@ -59,15 +69,33 @@ def _merge_phrases(line: list[Word]) -> list[tuple[str, float, float]]:
     return [(p[0], p[1], p[2]) for p in phrases]
 
 
-def _find_header_line(
-    lines: list[list[Word]], cfg: RRHeadersConfig
-) -> tuple[int, list[tuple[str, float, float]]] | None:
-    best: tuple[int, int, list[tuple[str, float, float]]] | None = None
+def _find_header_line(lines: list[list[Word]], cfg: RRHeadersConfig) -> tuple[int, Phrases] | None:
+    best: tuple[int, int, Phrases] | None = None
     for i, line in enumerate(lines):
         phrases = _merge_phrases(line)
         score = len(match_headers([p[0] for p in phrases], cfg))
         if score >= MIN_HEADER_FIELDS and (best is None or score > best[0]):
             best = (score, i, phrases)
+    return None if best is None else (best[1], best[2])
+
+
+def is_month_label(text: str) -> bool:
+    for fmt in MONTH_FORMATS:
+        try:
+            datetime.strptime(text.strip(), fmt)
+        except ValueError:
+            continue
+        return True
+    return False
+
+
+def _find_t12_header(lines: list[list[Word]]) -> tuple[int, Phrases] | None:
+    best: tuple[int, int, Phrases] | None = None
+    for i, line in enumerate(lines):
+        phrases = _merge_phrases(line)
+        months = sum(1 for p in phrases if is_month_label(p[0]))
+        if months >= MIN_T12_MONTH_HEADERS and (best is None or months > best[0]):
+            best = (months, i, phrases)
     return None if best is None else (best[1], best[2])
 
 
@@ -107,9 +135,7 @@ def _row_cells(
     return cells
 
 
-def _classify(
-    cells: dict[str, RawCell], headers: list[str], header_norms: list[str], is_repeat: bool
-) -> RowKind:
+def _classify_rent_roll(cells: dict[str, RawCell], headers: list[str], is_repeat: bool) -> RowKind:
     if not cells:
         return "blank"
     if is_repeat:
@@ -125,14 +151,44 @@ def _classify(
     return "footnote"
 
 
-def _fingerprint(cfg: RRHeadersConfig) -> str:
-    blob = json.dumps(
-        {"fields": cfg.fields, "min": cfg.fuzzy_min_score}, sort_keys=True, ensure_ascii=True
-    )
+def _is_numeric_text(text: str) -> bool:
+    return text in DASHES or bool(NUMERIC_CELL.match(text))
+
+
+def _t12_classifier(coa: CoaConfig) -> Classifier:
+    subtotal_labels = {
+        normalize_header(label)
+        for group in coa.subtotal_labels.model_dump().values()
+        for label in group
+    }
+
+    def classify(cells: dict[str, RawCell], headers: list[str], is_repeat: bool) -> RowKind:
+        if not cells:
+            return "blank"
+        if is_repeat:
+            return "header"
+        label_cell = cells.get(headers[0])
+        if label_cell is None:
+            return "footnote"
+        if not any(_is_numeric_text(c.text) for h, c in cells.items() if h != headers[0]):
+            return "footnote"
+        if normalize_header(label_cell.text) in subtotal_labels or SUBTOTAL_LIKE.search(
+            label_cell.text
+        ):
+            return "subtotal"
+        return "line"
+
+    return classify
+
+
+def _fingerprint(*parts: Any) -> str:
+    blob = json.dumps(parts, sort_keys=True, ensure_ascii=True, default=str)
     return hashlib.sha256(blob.encode("utf-8")).hexdigest()[:16]
 
 
-def _extract(path: Path, cfg: RRHeadersConfig, source_file: str) -> RawTable:
+def _extract(
+    path: Path, source_file: str, find_header: HeaderFinder, classify: Classifier
+) -> RawTable:
     headers: list[str] = []
     header_norms: list[str] = []
     bounds: list[tuple[float, float]] = []
@@ -149,7 +205,7 @@ def _extract(path: Path, cfg: RRHeadersConfig, source_file: str) -> RawTable:
             header_idx: int | None = None
 
             if not headers:
-                found = _find_header_line(lines, cfg)
+                found = find_header(lines)
                 if found is not None:
                     header_idx, phrases = found
                     headers = _unique_headers([p[0] for p in phrases])
@@ -178,10 +234,8 @@ def _extract(path: Path, cfg: RRHeadersConfig, source_file: str) -> RawTable:
 
             start = 0 if header_idx is None else header_idx
             for i in range(start, len(lines)):
-                line = lines[i]
-                is_repeat = i == header_idx
-                cells = _row_cells(line, headers, bounds)
-                kind = _classify(cells, headers, header_norms, is_repeat)
+                cells = _row_cells(lines[i], headers, bounds)
+                kind = classify(cells, headers, i == header_idx)
                 rows.append(RawRow(page_no, None, len(rows), kind, cells))
             close = getattr(page, "close", None)
             if close:
@@ -198,22 +252,14 @@ def _extract(path: Path, cfg: RRHeadersConfig, source_file: str) -> RawTable:
     )
 
 
-def extract_pdf_table(
+def _cached(
     path: Path,
-    cfg: RRHeadersConfig,
-    *,
-    cache_dir: Path | None = None,
-    source_file: str | None = None,
+    name: str,
+    fingerprint: str,
+    cache_dir: Path | None,
+    build: Callable[[], RawTable],
 ) -> RawTable:
-    """Extract the main table from a text-layer PDF.
-
-    Pure with respect to the file. With ``cache_dir`` the result is cached as
-    ``<sha256 of file>.json`` (the entry also records a fingerprint of the header config, and is
-    ignored when it no longer matches).
-    """
-    name = source_file or path.name
     cache_path: Path | None = None
-    fingerprint = _fingerprint(cfg)
     if cache_dir is not None:
         digest = hashlib.sha256(path.read_bytes()).hexdigest()
         cache_path = cache_dir / f"{digest}.json"
@@ -221,8 +267,7 @@ def extract_pdf_table(
             entry = json.loads(cache_path.read_text(encoding="utf-8"))
             if entry.get("fingerprint") == fingerprint and entry["table"]["source_file"] == name:
                 return RawTable.from_json_dict(entry["table"])
-
-    table = _extract(path, cfg, name)
+    table = build()
     if cache_path is not None:
         cache_path.parent.mkdir(parents=True, exist_ok=True)
         tmp = cache_path.with_name(cache_path.name + ".tmp")
@@ -230,3 +275,46 @@ def extract_pdf_table(
         tmp.write_text(json.dumps(payload, ensure_ascii=True), encoding="utf-8")
         os.replace(tmp, cache_path)
     return table
+
+
+def extract_pdf_table(
+    path: Path,
+    cfg: RRHeadersConfig,
+    *,
+    cache_dir: Path | None = None,
+    source_file: str | None = None,
+) -> RawTable:
+    """Extract the rent roll table from a text-layer PDF.
+
+    Pure with respect to the file. With ``cache_dir`` the result is cached as
+    ``<sha256 of file>.json`` (the entry also records a fingerprint of the header config, and is
+    ignored when it no longer matches).
+    """
+    name = source_file or path.name
+    return _cached(
+        path,
+        name,
+        _fingerprint("rr", cfg.fields, cfg.fuzzy_min_score),
+        cache_dir,
+        lambda: _extract(
+            path, name, lambda lines: _find_header_line(lines, cfg), _classify_rent_roll
+        ),
+    )
+
+
+def extract_pdf_t12_table(
+    path: Path,
+    coa: CoaConfig,
+    *,
+    cache_dir: Path | None = None,
+    source_file: str | None = None,
+) -> RawTable:
+    """Extract the T-12 grid from a text-layer PDF: header = month labels, rows = ``line``."""
+    name = source_file or path.name
+    return _cached(
+        path,
+        name,
+        _fingerprint("t12", coa.subtotal_labels.model_dump()),
+        cache_dir,
+        lambda: _extract(path, name, _find_t12_header, _t12_classifier(coa)),
+    )
