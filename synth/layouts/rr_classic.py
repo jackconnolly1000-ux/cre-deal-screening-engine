@@ -59,7 +59,9 @@ def _put(c: canvas.Canvas, text: str, x: float, width: int, align: str, y: float
     if align == "r":
         c.drawRightString(x + width - 3, y, text)
     else:
-        c.drawString(x + 3, y, text)
+        c.drawString(
+            x + 6, y, text
+        )  # >= 9 pt to the next cell: wider than the 6 pt header-merge rule
 
 
 def render(
