@@ -1,0 +1,49 @@
+[project]
+name = "cre-screen"
+version = "0.1.0"
+description = "Multifamily deal-screening and reconciliation engine"
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+license = { text = "AGPL-3.0-only" }
+dependencies = [
+  "pydantic>=2.7",
+  "pyyaml",
+  "anthropic",
+  "instructor",
+  "pdfplumber",
+  "pymupdf",
+  "openpyxl",
+  "rapidfuzz",
+  "reportlab",
+  "faker",
+  "pillow",
+  "streamlit",
+  "formulas",
+]
+
+[dependency-groups]
+dev = ["pytest", "pytest-cov", "hypothesis", "ruff"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cre_screen"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "."]
+testpaths = ["tests", "evals"]
+addopts = "-m 'not live and not heldout'"
+markers = [
+  "live: calls the real Anthropic API; costs money; never in CI",
+  "heldout: touches locked held-out deals; only during the M8 final run",
+  "slow: takes more than 10 seconds",
+]
