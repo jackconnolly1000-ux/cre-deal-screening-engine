@@ -1,0 +1,22 @@
+{
+  "cost_usd": "0.006922",
+  "created_at": "2026-11-07T21:51:42+00:00",
+  "key": "d0f20b8f9ebf5e74349e85ac1750cfee75e7bc3bc6599ad6f7324638d630adc1",
+  "model": "claude-sonnet-5-5",
+  "response": {
+    "mappings": [
+      {
+        "bucket": "OTHER_INCOME",
+        "is_nonrecurring": true,
+        "line_label": "Insurance Proceeds",
+        "rationale": "One-time insurance recovery booked as income. Flagged nonrecurring so it can be excluded from normalized NOI."
+      }
+    ]
+  },
+  "task": "coa_map",
+  "usage": {
+    "attempts": 1,
+    "input_tokens": 1626,
+    "output_tokens": 367
+  }
+}

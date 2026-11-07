@@ -1,0 +1,22 @@
+{
+  "cost_usd": "0.005964",
+  "created_at": "2026-11-07T20:59:44+00:00",
+  "key": "4b4e694672d5f40deb52a176ac3eed0d703264a2b2a7c3f6544d69a8df10a8b8",
+  "model": "claude-sonnet-5-5",
+  "response": {
+    "mappings": [
+      {
+        "bucket": "OTHER_INCOME",
+        "is_nonrecurring": true,
+        "line_label": "Lease Buyout Fee",
+        "rationale": "Fee paid by a tenant to terminate a lease early. It is ancillary income and a one-time item, so it is flagged nonrecurring."
+      }
+    ]
+  },
+  "task": "coa_map",
+  "usage": {
+    "attempts": 1,
+    "input_tokens": 1627,
+    "output_tokens": 271
+  }
+}

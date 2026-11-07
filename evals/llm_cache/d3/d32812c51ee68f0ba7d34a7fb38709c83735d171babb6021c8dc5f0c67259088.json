@@ -1,0 +1,373 @@
+{
+  "cost_usd": "0.033566",
+  "created_at": "2026-11-07T21:51:38+00:00",
+  "key": "d32812c51ee68f0ba7d34a7fb38709c83735d171babb6021c8dc5f0c67259088",
+  "model": "claude-sonnet-5-5",
+  "response": {
+    "headers": [
+      "Apt #",
+      "Floorplan",
+      "BR",
+      "Ba",
+      "SF",
+      "Occ Status",
+      "Contract Rent",
+      "Market",
+      "Move In",
+      "Lease Exp",
+      "Concession"
+    ],
+    "rows": [
+      {
+        "cells": {
+          "Apt #": "White Commons Apartments - Rent Roll (continued)"
+        },
+        "row_kind": "other"
+      },
+      {
+        "cells": {
+          "Apt #": "305",
+          "BR": "1",
+          "Ba": "1",
+          "Concession": "",
+          "Contract Rent": "1,499.21",
+          "Floorplan": "1x1",
+          "Lease Exp": "04/04/2027",
+          "Market": "1,418.00",
+          "Move In": "04/05/2026",
+          "Occ Status": "Occupied",
+          "SF": "734"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Apt #": "306",
+          "BR": "1",
+          "Ba": "1",
+          "Concession": "",
+          "Contract Rent": "1,568.22",
+          "Floorplan": "1x1",
+          "Lease Exp": "12/14/2026",
+          "Market": "1,423.00",
+          "Move In": "12/15/2025",
+          "Occ Status": "Occupied",
+          "SF": "718"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Apt #": "307",
+          "BR": "1",
+          "Ba": "1",
+          "Concession": "",
+          "Contract Rent": "1,505.89",
+          "Floorplan": "1x1",
+          "Lease Exp": "03/11/2027",
+          "Market": "1,471.00",
+          "Move In": "03/12/2026",
+          "Occ Status": "Occupied",
+          "SF": "751"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Apt #": "308",
+          "BR": "1",
+          "Ba": "1",
+          "Concession": "",
+          "Contract Rent": "1,617.19",
+          "Floorplan": "1x1",
+          "Lease Exp": "07/22/2027",
+          "Market": "1,483.00",
+          "Move In": "07/23/2026",
+          "Occ Status": "Occupied",
+          "SF": "754"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Apt #": "401",
+          "BR": "2",
+          "Ba": "1",
+          "Concession": "",
+          "Contract Rent": "1,868.73",
+          "Floorplan": "2x1",
+          "Lease Exp": "11/03/2026",
+          "Market": "1,865.00",
+          "Move In": "11/04/2025",
+          "Occ Status": "Occupied",
+          "SF": "884"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Apt #": "402",
+          "BR": "3",
+          "Ba": "2",
+          "Concession": "",
+          "Contract Rent": "2,670.09",
+          "Floorplan": "3x2",
+          "Lease Exp": "12/25/2026",
+          "Market": "2,665.00",
+          "Move In": "12/26/2025",
+          "Occ Status": "Occupied",
+          "SF": "1344"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Apt #": "403",
+          "BR": "2",
+          "Ba": "1",
+          "Concession": "",
+          "Contract Rent": "",
+          "Floorplan": "2x1",
+          "Lease Exp": "",
+          "Market": "1,803.00",
+          "Move In": "",
+          "Occ Status": "Vacant",
+          "SF": "885"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Apt #": "404",
+          "BR": "1",
+          "Ba": "1",
+          "Concession": "",
+          "Contract Rent": "",
+          "Floorplan": "1x1",
+          "Lease Exp": "",
+          "Market": "1,423.00",
+          "Move In": "",
+          "Occ Status": "Vacant",
+          "SF": "722"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Apt #": "405",
+          "BR": "2",
+          "Ba": "2",
+          "Concession": "",
+          "Contract Rent": "2,198.18",
+          "Floorplan": "2x2",
+          "Lease Exp": "11/10/2026",
+          "Market": "2,079.00",
+          "Move In": "11/11/2025",
+          "Occ Status": "Occupied",
+          "SF": "984"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Apt #": "406",
+          "BR": "1",
+          "Ba": "1",
+          "Concession": "",
+          "Contract Rent": "1,507.00",
+          "Floorplan": "1x1",
+          "Lease Exp": "05/06/2027",
+          "Market": "1,488.00",
+          "Move In": "05/07/2026",
+          "Occ Status": "Occupied",
+          "SF": "677"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Apt #": "407",
+          "BR": "0",
+          "Ba": "1",
+          "Concession": "",
+          "Contract Rent": "1,125.24",
+          "Floorplan": "Studio",
+          "Lease Exp": "03/15/2027",
+          "Market": "1,011.00",
+          "Move In": "03/16/2026",
+          "Occ Status": "Occupied",
+          "SF": "483"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Apt #": "408",
+          "BR": "1",
+          "Ba": "1",
+          "Concession": "",
+          "Contract Rent": "0.00",
+          "Floorplan": "1x1",
+          "Lease Exp": "",
+          "Market": "1,510.00",
+          "Move In": "",
+          "Occ Status": "Model",
+          "SF": "785"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Apt #": "501",
+          "BR": "1",
+          "Ba": "1",
+          "Concession": "",
+          "Contract Rent": "1,532.60",
+          "Floorplan": "1x1",
+          "Lease Exp": "12/30/2026",
+          "Market": "1,513.00",
+          "Move In": "12/31/2025",
+          "Occ Status": "Occupied",
+          "SF": "706"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Apt #": "502",
+          "BR": "1",
+          "Ba": "1",
+          "Concession": "",
+          "Contract Rent": "1,532.60",
+          "Floorplan": "1x1",
+          "Lease Exp": "05/21/2027",
+          "Market": "1,420.00",
+          "Move In": "05/22/2026",
+          "Occ Status": "Occupied",
+          "SF": "730"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Apt #": "503",
+          "BR": "2",
+          "Ba": "2",
+          "Concession": "",
+          "Contract Rent": "2,105.80",
+          "Floorplan": "2x2",
+          "Lease Exp": "11/17/2026",
+          "Market": "2,079.00",
+          "Move In": "11/18/2025",
+          "Occ Status": "Occupied",
+          "SF": "1006"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Apt #": "504",
+          "BR": "1",
+          "Ba": "1",
+          "Concession": "",
+          "Contract Rent": "1,608.29",
+          "Floorplan": "1x1",
+          "Lease Exp": "09/20/2026",
+          "Market": "1,474.00",
+          "Move In": "09/21/2025",
+          "Occ Status": "Occupied",
+          "SF": "775"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Apt #": "505",
+          "BR": "2",
+          "Ba": "2",
+          "Concession": "",
+          "Contract Rent": "2,375.14",
+          "Floorplan": "2x2",
+          "Lease Exp": "03/28/2027",
+          "Market": "2,178.00",
+          "Move In": "03/29/2026",
+          "Occ Status": "Occupied",
+          "SF": "1148"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Apt #": "506",
+          "BR": "2",
+          "Ba": "2",
+          "Concession": "",
+          "Contract Rent": "2,283.88",
+          "Floorplan": "2x2",
+          "Lease Exp": "09/19/2026",
+          "Market": "2,138.00",
+          "Move In": "09/20/2025",
+          "Occ Status": "Occupied",
+          "SF": "1123"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Apt #": "507",
+          "BR": "2",
+          "Ba": "1",
+          "Concession": "",
+          "Contract Rent": "1,961.11",
+          "Floorplan": "2x1",
+          "Lease Exp": "03/12/2027",
+          "Market": "1,816.00",
+          "Move In": "03/13/2026",
+          "Occ Status": "Occupied",
+          "SF": "946"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Apt #": "Total",
+          "BR": "",
+          "Ba": "",
+          "Concession": "",
+          "Contract Rent": "63,632.47",
+          "Floorplan": "",
+          "Lease Exp": "",
+          "Market": "65,178.00",
+          "Move In": "",
+          "Occ Status": "",
+          "SF": ""
+        },
+        "row_kind": "subtotal"
+      },
+      {
+        "cells": {
+          "Apt #": "Rents are scheduled monthly amounts in US dollars."
+        },
+        "row_kind": "footnote"
+      },
+      {
+        "cells": {
+          "Apt #": "Vacant units show no lease dates or in-place rent."
+        },
+        "row_kind": "footnote"
+      },
+      {
+        "cells": {
+          "Apt #": "Page 2 of 2"
+        },
+        "row_kind": "other"
+      }
+    ]
+  },
+  "task": "vision_page",
+  "usage": {
+    "attempts": 1,
+    "input_tokens": 3433,
+    "output_tokens": 2670
+  }
+}
