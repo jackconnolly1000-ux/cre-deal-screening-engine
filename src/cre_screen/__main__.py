@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
+import subprocess
 import sys
 from collections import Counter
 from datetime import date
@@ -208,6 +210,26 @@ def cmd_export(args: argparse.Namespace) -> int:
     return _export(pkg, args.out, args.allow_open_blocks, synthetic)
 
 
+APP_SCRIPT = Path(__file__).resolve().parent / "app" / "streamlit_app.py"
+
+
+def cmd_app(args: argparse.Namespace) -> int:
+    """Launch the review UI. The server runs in the foreground until the user stops it."""
+    command = [
+        sys.executable,
+        "-m",
+        "streamlit",
+        "run",
+        str(APP_SCRIPT),
+        "--browser.gatherUsageStats",
+        "false",
+    ]
+    if args.port is not None:
+        command += ["--server.port", str(args.port)]
+    print(f"Starting the review UI: {' '.join(command[2:])}")
+    return subprocess.run(command, check=False, env=dict(os.environ)).returncode
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="python -m cre_screen")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -235,6 +257,9 @@ def build_parser() -> argparse.ArgumentParser:
     export.add_argument("--out", type=Path, required=True)
     export.add_argument("--allow-open-blocks", action="store_true")
     export.set_defaults(func=cmd_export)
+    app = sub.add_parser("app", help="launch the Streamlit review UI")
+    app.add_argument("--port", type=int, default=None)
+    app.set_defaults(func=cmd_app)
     return parser
 
 

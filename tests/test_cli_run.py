@@ -113,3 +113,44 @@ def test_a_run_cap_below_the_worst_case_exits_3_before_any_call(
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     assert main(["run", str(DATA / "deal_005"), "--run-cap", "0.0000001"]) == 3
     assert "run cap" in capsys.readouterr().err
+
+
+# ---------- the app command ----------
+
+
+def test_app_launches_streamlit_on_the_review_script(
+    monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    import subprocess
+
+    from cre_screen import __main__ as cli
+
+    calls: list[list[str]] = []
+
+    def fake_run(command, **kwargs):
+        calls.append(command)
+        return subprocess.CompletedProcess(command, 0)
+
+    monkeypatch.setattr(cli.subprocess, "run", fake_run)
+    assert main(["app"]) == 0
+    (command,) = calls
+    assert command[1:4] == ["-m", "streamlit", "run"]
+    assert command[4].replace("\\", "/").endswith("cre_screen/app/streamlit_app.py")
+    assert Path(command[4]).exists()
+    assert command[-2:] == ["--browser.gatherUsageStats", "false"]
+    assert "Starting the review UI" in capsys.readouterr().out
+
+
+def test_app_passes_the_port_and_the_servers_exit_code(monkeypatch: pytest.MonkeyPatch) -> None:
+    import subprocess
+
+    from cre_screen import __main__ as cli
+
+    seen: list[list[str]] = []
+    monkeypatch.setattr(
+        cli.subprocess,
+        "run",
+        lambda command, **_k: seen.append(command) or subprocess.CompletedProcess(command, 7),
+    )
+    assert main(["app", "--port", "8123"]) == 7
+    assert seen[0][-2:] == ["--server.port", "8123"]
