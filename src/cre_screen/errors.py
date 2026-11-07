@@ -66,3 +66,7 @@ class ProformaError(CreScreenError):
 
 class T12ExtractError(CreScreenError):
     """The T-12 table could not be turned into a statement."""
+
+
+class OverrideError(CreScreenError):
+    """An override is malformed or cannot be applied by the gate."""
