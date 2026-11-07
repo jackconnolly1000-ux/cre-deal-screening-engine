@@ -145,6 +145,8 @@ class AnthropicLLMClient:
             )
         self._tracker.check_can_spend(self._tracker.worst_case_cost(model_id, estimate, max_tokens))
 
+        # anthropic 2.x has no temperature parameter on messages.create (SPEC 7.7 predates it),
+        # so it is not sent; cfg.temperature still goes into the cache key.
         client = self._client()
         state = _AttemptState(task, model_id)
         self._active = state
@@ -152,7 +154,6 @@ class AnthropicLLMClient:
             result: T = client.messages.create(
                 model=model_id,
                 max_tokens=max_tokens,
-                temperature=cfg.temperature,
                 system=system,
                 messages=[{"role": "user", "content": user_content}],
                 response_model=response_model,

@@ -120,7 +120,7 @@ def test_live_call_passes_config_values_to_instructor(models: ModelsConfig, tmp_
     (sent,) = fake.calls
     assert sent["model"] == models.default_model == "claude-haiku-5-5"
     assert sent["max_tokens"] == models.max_tokens.header_map
-    assert sent["temperature"] == 0
+    assert "temperature" not in sent, "anthropic 2.x messages.create takes no temperature"
     assert sent["max_retries"] == models.max_retries
     assert sent["system"] == "sys"
     assert sent["messages"] == [{"role": "user", "content": TEXT}]
