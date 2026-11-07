@@ -1043,10 +1043,16 @@ class Override(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     check_id: CheckId
-    action: Literal["clear", "override", "edit_value", "remap_line"]
-    target: str  # unit_id, line label, or "*"
+    action: Literal["clear", "override", "edit_value", "remap_line", "resolve_footing"]
+    # unit_id, line label or "*" for clear/override; "<unit id>:<field>" for edit_value;
+    # "<line label>=<BUCKET>" for remap_line; the stated-total column for resolve_footing
+    target: str
     note: str = Field(min_length=10)
     at: datetime
+    corrected_value: Money | None = None  # the number that replaces the broken one
+    resolution_strategy: (
+        Literal["use_calculated_sum", "use_stated_total", "edit_line_item"] | None
+    ) = None
 ```
 
 ### 6.8 `schemas/deal.py`
@@ -1403,7 +1409,10 @@ Definitions used below:
 
 - Export is allowed when `DealPackage.open_blocks()` is empty.
 - A block finding can be set to `overridden` only with a reviewer note of at least `override_note_min_chars` characters. An override is stored as an `Override` and re-applied on re-run.
-- `edit_value` overrides change a unit's money field, set that field's citation provenance to `manual_override` (keeping the original raw text in the note), and re-run the gate from `FOOTING`.
+- `edit_value` overrides change a unit's money field to `corrected_value`, set that field's citation provenance to `manual_override` (keeping the original raw text), and re-run the gate from `FOOTING`.
+- `resolve_footing` (strategy `use_calculated_sum`) replaces a stated grand total with the computed sum of the unit rows. `corrected_value` must equal that sum to the cent. The stated total's citation becomes `manual_override` and keeps the printed text. `use_stated_total` and `edit_line_item` are `edit_value` overrides: the reviewer names the unit and the amount that makes the rows sum to the stated total. Nothing is plugged. If the rows still do not foot, the gate re-run leaves the block open.
+- Data overrides are applied by `review.apply_data_overrides`, which is idempotent. The Excel writer calls it again on `pkg.overrides`, so a correction missing from the package data is injected before any cell is written.
+- The review UI offers no bare note override for `RR_FOOTING`: the reviewer must choose which number governs.
 
 ---
 

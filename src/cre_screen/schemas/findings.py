@@ -49,7 +49,13 @@ class Override(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     check_id: CheckId
-    action: Literal["clear", "override", "edit_value", "remap_line"]
-    target: str  # unit_id, line label, or "*"
+    action: Literal["clear", "override", "edit_value", "remap_line", "resolve_footing"]
+    # unit_id, line label or "*" for clear/override; "<unit id>:<field>" for edit_value;
+    # "<line label>=<BUCKET>" for remap_line; the stated-total column for resolve_footing
+    target: str
     note: str = Field(min_length=10)
     at: datetime
+    corrected_value: Money | None = None  # the number that replaces the broken one
+    resolution_strategy: (
+        Literal["use_calculated_sum", "use_stated_total", "edit_line_item"] | None
+    ) = None

@@ -27,6 +27,7 @@ from cre_screen.errors import ExportError
 from cre_screen.export import layout as L
 from cre_screen.export.uw_math import Assumptions
 from cre_screen.reconcile.metrics import normalize_unit_id
+from cre_screen.review import apply_data_overrides
 from cre_screen.schemas.citation import Citation
 from cre_screen.schemas.common import OPEX_BUCKETS, REVENUE_BUCKETS
 from cre_screen.schemas.deal import DealPackage
@@ -535,9 +536,20 @@ def _proforma_sheet(ws: Worksheet) -> None:
 # ---------- entry point ----------
 
 
+def _with_corrections(pkg: DealPackage) -> DealPackage:
+    """Inject every active data override's corrected value before a cell is written.
+
+    The review UI and the pipeline already apply overrides, and applying them again is a no-op.
+    This guarantees that a package carrying an override can never export the value it replaced.
+    """
+    rent_roll, t12 = apply_data_overrides(pkg.rent_roll, pkg.t12, pkg.overrides)
+    return pkg.model_copy(update={"rent_roll": rent_roll, "t12": t12})
+
+
 def build_workbook(
     pkg: DealPackage, *, synthetic: bool = False, assumptions: Assumptions | None = None
 ) -> Workbook:
+    pkg = _with_corrections(pkg)
     wb = Workbook()
     sheets = {name: wb.create_sheet(name) for name in L.SHEET_ORDER}
     del wb[wb.sheetnames[0]]  # openpyxl's default empty sheet

@@ -84,7 +84,9 @@ def test_a_valid_edit_override_changes_the_value_and_reruns_the_gate_from_footin
     fix = Override(
         check_id="RR_FOOTING",
         action="edit_value",
-        target="204:in_place_rent=1500.00",
+        target="204:in_place_rent",
+        corrected_value=Decimal("1500.00"),
+        resolution_strategy="edit_line_item",
         note="rent was blank in the scan",
         at=NOW,
     )

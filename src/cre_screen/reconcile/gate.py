@@ -18,7 +18,7 @@ from cre_screen.schemas.findings import Finding, GateState, GateTransition, Over
 
 logger = logging.getLogger(__name__)
 
-APPLIED_BY_UI = ("edit_value", "remap_line")
+APPLIED_BY_UI = ("edit_value", "remap_line", "resolve_footing")
 STATUS_FOR_ACTION = {"clear": "cleared", "override": "overridden"}
 
 

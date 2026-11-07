@@ -574,3 +574,96 @@ def test_workbook_bytes_match_the_file_writer(packages, tmp_path: Path) -> None:
         assert a == b, name
     expected = packages["deal_003"].created_at.replace(tzinfo=None, microsecond=0)
     assert from_bytes.properties.created == from_bytes.properties.modified == expected
+
+
+# ---------- corrections reach the export ----------
+
+
+def rent_cell(wb, unit_id: str, column: str = "G"):
+    ws = wb[L.RENT_ROLL]
+    row = next(r for r in range(L.RR_FIRST, ws.max_row + 1) if str(ws[f"A{r}"].value) == unit_id)
+    return ws[f"{column}{row}"].value
+
+
+def audit_value(wb, label: str):
+    ws = wb[L.AUDIT]
+    row = next(r for r in range(1, ws.max_row + 1) if label in str(ws[f"A{r}"].value))
+    return next(c.value for c in ws[row] if isinstance(c.value, int | float))
+
+
+def sheet_cells(wb, name: str):
+    return [[c.value for c in row] for row in wb[name].iter_rows()]
+
+
+def exported(pkg) -> openpyxl.Workbook:
+    from cre_screen.export.excel_writer import workbook_bytes
+
+    return openpyxl.load_workbook(io.BytesIO(workbook_bytes(pkg, synthetic=True)))
+
+
+def override_for(**kwargs):
+    from cre_screen.schemas.findings import Override
+
+    return Override(check_id="RR_FOOTING", note="reviewer corrected the figure", at=NOW, **kwargs)
+
+
+def test_a_corrected_unit_rent_replaces_the_broken_one_in_the_workbook(packages) -> None:
+    from cre_screen.review import apply_review
+
+    pkg = packages["deal_003"]
+    fix = override_for(
+        action="edit_value",
+        target="104:in_place_rent",
+        corrected_value=D("36000.00"),
+        resolution_strategy="use_stated_total",
+    )
+    assert rent_cell(exported(pkg), "104") in (None, "")
+    reviewed = apply_review(pkg, [fix], cfg=CFG, deal_dir=DATA / "deal_003")
+    assert rent_cell(exported(reviewed), "104") == 36000
+
+
+def test_the_writer_injects_a_correction_the_package_data_is_missing(packages) -> None:
+    pkg = packages["deal_003"]
+    fix = override_for(
+        action="edit_value",
+        target="104:in_place_rent",
+        corrected_value=D("1234.56"),
+        resolution_strategy="edit_line_item",
+    )
+    stale = pkg.model_copy(update={"overrides": [fix]})  # recorded, but the data was not corrected
+    assert stale.rent_roll.units[3].in_place_rent is None
+    assert rent_cell(exported(stale), "104") == 1234.56
+    assert stale.rent_roll.units[3].in_place_rent is None, "the caller package is not mutated"
+
+
+def test_use_calculated_sum_replaces_the_stated_total_in_the_audit_sheet(packages) -> None:
+    pkg = packages["deal_003"]
+    label = "Rent roll stated total: in_place_rent"
+    assert audit_value(exported(pkg), label) == 73703
+    fix = override_for(
+        action="resolve_footing",
+        target="in_place_rent",
+        corrected_value=D("37703.00"),
+        resolution_strategy="use_calculated_sum",
+    )
+    stale = pkg.model_copy(update={"overrides": [fix]})
+    assert audit_value(exported(stale), label) == 37703
+
+
+def test_an_already_corrected_package_exports_the_same_as_an_uncorrected_one(packages) -> None:
+    from cre_screen.review import apply_review
+
+    pkg = packages["deal_003"]
+    fix = override_for(
+        action="resolve_footing",
+        target="in_place_rent",
+        corrected_value=D("37703.00"),
+        resolution_strategy="use_calculated_sum",
+    )
+    reviewed = apply_review(pkg, [fix], cfg=CFG, deal_dir=DATA / "deal_003")
+    stale = pkg.model_copy(update={"overrides": [fix]})
+    a, b = exported(reviewed), exported(stale)
+    for sheet in (L.RENT_ROLL, L.T12):  # the audit sheet also lists findings, which differ
+        assert sheet_cells(a, sheet) == sheet_cells(b, sheet), sheet
+    label = "Rent roll stated total: in_place_rent"
+    assert audit_value(a, label) == audit_value(b, label) == 37703
