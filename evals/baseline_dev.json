@@ -1,0 +1,69 @@
+{
+  "split": "dev",
+  "deals": 14,
+  "planted": 36,
+  "caught": 36,
+  "false_positives": 0,
+  "clean_control_findings": 0,
+  "numeric_fields_total": 6448,
+  "numeric_fields_correct": 6448,
+  "numeric_accuracy": "1.0000",
+  "per_deal": {
+    "deal_001": {
+      "planted": 0,
+      "caught": 0
+    },
+    "deal_002": {
+      "planted": 0,
+      "caught": 0
+    },
+    "deal_003": {
+      "planted": 3,
+      "caught": 3
+    },
+    "deal_004": {
+      "planted": 4,
+      "caught": 4
+    },
+    "deal_005": {
+      "planted": 3,
+      "caught": 3
+    },
+    "deal_006": {
+      "planted": 3,
+      "caught": 3
+    },
+    "deal_007": {
+      "planted": 2,
+      "caught": 2
+    },
+    "deal_008": {
+      "planted": 3,
+      "caught": 3
+    },
+    "deal_009": {
+      "planted": 3,
+      "caught": 3
+    },
+    "deal_010": {
+      "planted": 3,
+      "caught": 3
+    },
+    "deal_011": {
+      "planted": 2,
+      "caught": 2
+    },
+    "deal_012": {
+      "planted": 3,
+      "caught": 3
+    },
+    "deal_013": {
+      "planted": 4,
+      "caught": 4
+    },
+    "deal_014": {
+      "planted": 3,
+      "caught": 3
+    }
+  }
+}

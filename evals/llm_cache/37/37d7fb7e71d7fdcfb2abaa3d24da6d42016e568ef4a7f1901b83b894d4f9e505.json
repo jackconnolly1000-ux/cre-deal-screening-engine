@@ -1,0 +1,22 @@
+{
+  "cost_usd": "0.0002556",
+  "created_at": "2026-11-07T00:32:16+00:00",
+  "key": "37d7fb7e71d7fdcfb2abaa3d24da6d42016e568ef4a7f1901b83b894d4f9e505",
+  "model": "claude-haiku-5-5",
+  "response": {
+    "mappings": [
+      {
+        "bucket": "OTHER_INCOME",
+        "is_nonrecurring": true,
+        "line_label": "Insurance Proceeds",
+        "rationale": "Insurance proceeds are one-time recoveries, not recurring property income; bucket chosen as income, flagged nonrecurring for review."
+      }
+    ]
+  },
+  "task": "coa_map",
+  "usage": {
+    "attempts": 1,
+    "input_tokens": 1906,
+    "output_tokens": 130
+  }
+}
