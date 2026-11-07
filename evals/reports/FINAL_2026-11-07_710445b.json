@@ -1,0 +1,132 @@
+[
+  {
+    "deal_id": "deal_015",
+    "split": "heldout",
+    "provenance_mix": {
+      "text_layer": 417
+    },
+    "numeric_fields_total": 417,
+    "numeric_fields_correct": 417,
+    "units_in_doc": 62,
+    "units_found": 62,
+    "phantom_units": 0,
+    "coa_dollars_total": "1732368.74",
+    "coa_dollars_correct": "1732368.74",
+    "planted": 3,
+    "caught": 3,
+    "false_positives": 0,
+    "clean_control_findings": 0,
+    "cost_usd": "0",
+    "wall_seconds": 0.817,
+    "misses": []
+  },
+  {
+    "deal_id": "deal_016",
+    "split": "heldout",
+    "provenance_mix": {
+      "llm_vision": 616
+    },
+    "numeric_fields_total": 616,
+    "numeric_fields_correct": 616,
+    "units_in_doc": 90,
+    "units_found": 90,
+    "phantom_units": 0,
+    "coa_dollars_total": "2351751.78",
+    "coa_dollars_correct": "2330825.60",
+    "planted": 3,
+    "caught": 2,
+    "false_positives": 2,
+    "clean_control_findings": 0,
+    "cost_usd": "0.0094513",
+    "wall_seconds": 46.992,
+    "misses": [
+      "TRAP_T12_ONE_TIME_INCOME: T12_NONRECURRING raised no finding"
+    ]
+  },
+  {
+    "deal_id": "deal_017",
+    "split": "heldout",
+    "provenance_mix": {
+      "excel": 628
+    },
+    "numeric_fields_total": 628,
+    "numeric_fields_correct": 628,
+    "units_in_doc": 93,
+    "units_found": 93,
+    "phantom_units": 0,
+    "coa_dollars_total": "2867753.40",
+    "coa_dollars_correct": "2867753.40",
+    "planted": 3,
+    "caught": 2,
+    "false_positives": 0,
+    "clean_control_findings": 0,
+    "cost_usd": "0E-7",
+    "wall_seconds": 0.063,
+    "misses": [
+      "TRAP_RR_HIDDEN_CONCESSION: RR_CONCESSION raised no finding"
+    ]
+  },
+  {
+    "deal_id": "deal_018",
+    "split": "heldout",
+    "provenance_mix": {
+      "llm_vision": 397
+    },
+    "numeric_fields_total": 397,
+    "numeric_fields_correct": 397,
+    "units_in_doc": 58,
+    "units_found": 58,
+    "phantom_units": 0,
+    "coa_dollars_total": "1821984.02",
+    "coa_dollars_correct": "1821984.02",
+    "planted": 3,
+    "caught": 3,
+    "false_positives": 0,
+    "clean_control_findings": 0,
+    "cost_usd": "0.0064381",
+    "wall_seconds": 29.056,
+    "misses": []
+  },
+  {
+    "deal_id": "deal_019",
+    "split": "heldout",
+    "provenance_mix": {
+      "excel": 239
+    },
+    "numeric_fields_total": 239,
+    "numeric_fields_correct": 239,
+    "units_in_doc": 35,
+    "units_found": 35,
+    "phantom_units": 0,
+    "coa_dollars_total": "954653.41",
+    "coa_dollars_correct": "954653.41",
+    "planted": 3,
+    "caught": 3,
+    "false_positives": 0,
+    "clean_control_findings": 0,
+    "cost_usd": "0E-7",
+    "wall_seconds": 0.376,
+    "misses": []
+  },
+  {
+    "deal_id": "deal_020",
+    "split": "heldout",
+    "provenance_mix": {
+      "text_layer": 281
+    },
+    "numeric_fields_total": 281,
+    "numeric_fields_correct": 281,
+    "units_in_doc": 41,
+    "units_found": 41,
+    "phantom_units": 0,
+    "coa_dollars_total": "1176026.56",
+    "coa_dollars_correct": "1176026.56",
+    "planted": 0,
+    "caught": 0,
+    "false_positives": 0,
+    "clean_control_findings": 0,
+    "cost_usd": "0E-7",
+    "wall_seconds": 0.402,
+    "misses": []
+  }
+]
