@@ -45,6 +45,12 @@ def estimate_prompt_tokens(
     return math.ceil(chars / chars_per_token) + images * IMAGE_TOKEN_ESTIMATE
 
 
+def _rejects_forced_tool(exc: Exception) -> bool:
+    """True for the API's 400 saying this model does not support ``tool_choice`` tool or any."""
+    text = str(exc)
+    return "tool_choice" in text and "not supported" in text
+
+
 class _AttemptState:
     def __init__(self, task: str, model: str) -> None:
         self.task = task
@@ -63,14 +69,18 @@ class AnthropicLLMClient:
         tracker: CostTracker,
         *,
         instructor_client: Any | None = None,
+        json_instructor_client: Any | None = None,
     ) -> None:
         self._cfg = cfg
         self._cache = cache
         self._tracker = tracker
         self._instructor = instructor_client
+        self._json_instructor = json_instructor_client
+        self._json_models: set[str] = set()  # models that refuse a forced tool call
         self._active: _AttemptState | None = None
-        if instructor_client is not None:
-            instructor_client.on("completion:response", self._on_response)
+        for client in (instructor_client, json_instructor_client):
+            if client is not None:
+                client.on("completion:response", self._on_response)
 
     # ----- live client -----
 
@@ -84,6 +94,20 @@ class AnthropicLLMClient:
             self._instructor = instructor.from_anthropic(anthropic.Anthropic())
             self._instructor.on("completion:response", self._on_response)
         return self._instructor
+
+    def _json_client(self) -> Any:
+        """Instructor in JSON mode, for models whose API rejects a forced ``tool_choice``."""
+        if self._json_instructor is None:
+            if not os.environ.get(API_KEY_ENV):
+                raise ConfigError(f"{API_KEY_ENV} is not set; a live call needs it")
+            import anthropic
+            import instructor
+
+            self._json_instructor = instructor.from_anthropic(
+                anthropic.Anthropic(), mode=instructor.Mode.ANTHROPIC_JSON
+            )
+            self._json_instructor.on("completion:response", self._on_response)
+        return self._json_instructor
 
     def _on_response(self, response: Any) -> None:
         """Called by Instructor once per attempt, including attempts that later fail validation."""
@@ -147,11 +171,11 @@ class AnthropicLLMClient:
 
         # anthropic 2.x has no temperature parameter on messages.create (SPEC 7.7 predates it),
         # so it is not sent; cfg.temperature still goes into the cache key.
-        client = self._client()
         state = _AttemptState(task, model_id)
         self._active = state
-        try:
-            result: T = client.messages.create(
+
+        def call(client: Any) -> T:
+            return client.messages.create(
                 model=model_id,
                 max_tokens=max_tokens,
                 system=system,
@@ -159,6 +183,19 @@ class AnthropicLLMClient:
                 response_model=response_model,
                 max_retries=cfg.max_retries,
             )
+
+        try:
+            if model_id in self._json_models:
+                result: T = call(self._json_client())
+            else:
+                try:
+                    result = call(self._client())
+                except Exception as exc:
+                    if not _rejects_forced_tool(exc):
+                        raise
+                    logger.info("%s rejects a forced tool call; using JSON mode", model_id)
+                    self._json_models.add(model_id)
+                    result = call(self._json_client())
         finally:
             self._active = None
 

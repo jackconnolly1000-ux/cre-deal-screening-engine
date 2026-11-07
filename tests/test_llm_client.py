@@ -333,3 +333,70 @@ def test_importing_the_client_does_not_import_the_sdk() -> None:
         "assert 'anthropic' not in sys.modules and 'instructor' not in sys.modules"
     )
     subprocess.run([sys.executable, "-c", code], check=True)
+
+
+# ---------- models that reject a forced tool call ----------
+
+REJECTION = RuntimeError(
+    'Error code: 400 - tool_choice: type "tool" and "any" are not supported for this model.'
+)
+
+
+def with_json_fallback(models, tmp_path, tools, json_mode):
+    cache = LLMCache(tmp_path / "cache", mode="record", version=models.cache.version)  # type: ignore[arg-type]
+    tracker = CostTracker(models, tmp_path / "ledger.jsonl", run_id="r")
+    client = AnthropicLLMClient(
+        models, cache, tracker, instructor_client=tools, json_instructor_client=json_mode
+    )
+    return client, tracker
+
+
+def ask(client, model="claude-sonnet-5-5"):
+    return client.structured(
+        task="header_map", response_model=Answer, system="s", user_content=TEXT, model=model
+    )
+
+
+def test_a_model_that_rejects_forced_tools_falls_back_to_json_mode(
+    models: ModelsConfig, tmp_path: Path
+) -> None:
+    tools = FakeInstructor((REJECTION, []))
+    json_mode = FakeInstructor((Answer(value="ok"), [(100, 10)]))
+    client, tracker = with_json_fallback(models, tmp_path, tools, json_mode)
+    assert ask(client).value == "ok"
+    assert len(tools.calls) == 1 and len(json_mode.calls) == 1
+    assert tracker.run_total() > 0, "the JSON-mode attempt is ledgered"
+
+
+def test_the_fallback_is_remembered_so_the_next_call_skips_the_tool_attempt(
+    models: ModelsConfig, tmp_path: Path
+) -> None:
+    tools = FakeInstructor((REJECTION, []))
+    json_mode = FakeInstructor((Answer(value="a"), [(100, 10)]), (Answer(value="b"), [(100, 10)]))
+    client, _ = with_json_fallback(models, tmp_path, tools, json_mode)
+    ask(client)
+    client.structured(
+        task="header_map", response_model=Answer, system="other", user_content=TEXT,
+        model="claude-sonnet-5-5",
+    )  # fmt: skip
+    assert len(tools.calls) == 1 and len(json_mode.calls) == 2
+
+
+def test_other_errors_are_not_swallowed_by_the_fallback(
+    models: ModelsConfig, tmp_path: Path
+) -> None:
+    tools = FakeInstructor((RuntimeError("500 server error"), []))
+    json_mode = FakeInstructor()
+    client, _ = with_json_fallback(models, tmp_path, tools, json_mode)
+    with pytest.raises(RuntimeError, match="500"):
+        ask(client)
+    assert not json_mode.calls
+
+
+def test_a_model_that_accepts_tools_never_touches_json_mode(
+    models: ModelsConfig, tmp_path: Path
+) -> None:
+    tools = FakeInstructor((Answer(value="ok"), [(100, 10)]))
+    json_mode = FakeInstructor()
+    client, _ = with_json_fallback(models, tmp_path, tools, json_mode)
+    assert ask(client, "claude-haiku-5-5").value == "ok" and not json_mode.calls
