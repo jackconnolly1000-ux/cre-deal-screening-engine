@@ -61,18 +61,38 @@ def test_extraction_cache_goes_under_the_out_dir_never_into_data(tmp_path: Path)
     assert list((tmp_path / "cache" / "extract").glob("*.json"))
 
 
-def test_overrides_clear_the_block_and_are_stored(tmp_path: Path) -> None:
+def test_a_bare_override_cannot_clear_a_footing_block(tmp_path: Path) -> None:
     note = Override(
         check_id="RR_FOOTING", action="override", target="*", note="seller confirmed totals", at=NOW
     )
-    pkg = run("deal_003", tmp_path, overrides=[note])
-    assert pkg.final_state == "READY" and pkg.overrides == [note]
-    assert {f.status for f in pkg.findings if f.check_id == "RR_FOOTING"} == {"overridden"}
+    with pytest.raises(OverrideError, match="math failure"):
+        run("deal_003", tmp_path, overrides=[note])
+
+
+def test_a_resolved_footing_is_stored_and_the_block_is_gone_not_overridden(tmp_path: Path) -> None:
+    fix = Override(
+        check_id="RR_FOOTING",
+        action="resolve_footing",
+        target="in_place_rent",
+        corrected_value=Decimal("37703.00"),
+        resolution_strategy="use_calculated_sum",
+        note="the printed total has swapped digits",
+        at=NOW,
+    )
+    pkg = run("deal_003", tmp_path, overrides=[fix])
+    assert pkg.final_state == "READY" and pkg.overrides == [fix]
+    assert not [f for f in pkg.findings if f.check_id == "RR_FOOTING"]
 
 
 def test_a_malformed_data_override_is_rejected_with_a_clear_error(tmp_path: Path) -> None:
     edit = Override(
-        check_id="RR_FOOTING", action="edit_value", target="101", note="typo in the rent", at=NOW
+        check_id="RR_FOOTING",
+        action="edit_value",
+        target="101",
+        corrected_value=Decimal("1.00"),
+        resolution_strategy="edit_line_item",
+        note="typo in the rent",
+        at=NOW,
     )
     with pytest.raises(OverrideError, match="edit_value target must be"):
         run("deal_003", tmp_path, overrides=[edit])

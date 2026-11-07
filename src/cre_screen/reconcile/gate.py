@@ -20,6 +20,9 @@ logger = logging.getLogger(__name__)
 
 APPLIED_BY_UI = ("edit_value", "remap_line", "resolve_footing")
 STATUS_FOR_ACTION = {"clear": "cleared", "override": "overridden"}
+# Checks whose block findings are arithmetic: a note cannot make the numbers foot. They can only be
+# resolved by correcting data, which needs a resolution_strategy (see review.apply_data_overrides).
+STRICT_MATH_CHECKS = ("RR_FOOTING", "T12_FOOTING")
 
 
 @dataclass
@@ -47,6 +50,12 @@ def apply_overrides(
             raise OverrideError(f"override notes need at least {min_note_chars} characters")
         for finding in findings:
             if finding.check_id == override.check_id and _targets(finding, override.target):
+                if finding.check_id in STRICT_MATH_CHECKS and finding.severity == "block":
+                    raise OverrideError(
+                        f"{finding.check_id} is a math failure: a '{override.action}' note cannot "
+                        "resolve it. Correct the figure with a resolution_strategy "
+                        "(use_calculated_sum, use_stated_total or edit_line_item)"
+                    )
                 finding.status = STATUS_FOR_ACTION[override.action]  # type: ignore[assignment]
                 finding.reviewer_note = override.note.strip()
 

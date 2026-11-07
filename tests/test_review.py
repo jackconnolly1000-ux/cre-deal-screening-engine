@@ -197,7 +197,7 @@ def test_review_with_no_overrides_reproduces_the_gate_result(pkg) -> None:
     assert again.gate_log[0].from_state == "FOOTING"
 
 
-def test_a_status_override_with_a_note_takes_the_deal_to_ready(pkg) -> None:
+def test_a_status_override_cannot_take_a_footing_failure_to_ready(pkg) -> None:
     sign_off = Override(
         check_id="RR_FOOTING",
         action="override",
@@ -205,12 +205,34 @@ def test_a_status_override_with_a_note_takes_the_deal_to_ready(pkg) -> None:
         note="seller confirmed the total",
         at=NOW,
     )
-    reviewed = apply_review(pkg, [sign_off], cfg=CFG, deal_dir=DEAL)
-    assert reviewed.final_state == "READY" and reviewed.open_blocks() == []
-    assert reviewed.overrides == [sign_off]
-    footing = next(f for f in reviewed.findings if f.check_id == "RR_FOOTING")
-    assert footing.status == "overridden" and footing.reviewer_note == "seller confirmed the total"
-    assert pkg.final_state == "REVIEW", "the extracted package is untouched"
+    with pytest.raises(OverrideError, match="math failure"):
+        apply_review(pkg, [sign_off], cfg=CFG, deal_dir=DEAL)
+
+
+@pytest.mark.parametrize(
+    ("action", "strategy", "value"),
+    [
+        ("resolve_footing", None, "37703.00"),
+        ("resolve_footing", "edit_line_item", "37703.00"),
+        ("edit_value", None, "900"),
+        ("edit_value", "use_calculated_sum", "900"),
+    ],
+)
+def test_footing_data_overrides_need_the_right_resolution_strategy(
+    pkg, action: str, strategy: str | None, value: str
+) -> None:
+    target = "in_place_rent" if action == "resolve_footing" else "104:in_place_rent"
+    bad = Override(
+        check_id="RR_FOOTING",
+        action=action,  # type: ignore[arg-type]
+        target=target,
+        corrected_value=Decimal(value),
+        resolution_strategy=strategy,  # type: ignore[arg-type]
+        note="reviewer corrected the figure",
+        at=NOW,
+    )
+    with pytest.raises(OverrideError, match="needs a resolution_strategy"):
+        apply_data_overrides(pkg.rent_roll, pkg.t12, [bad])
 
 
 def test_fixing_the_footing_number_clears_the_block_the_honest_way(pkg) -> None:

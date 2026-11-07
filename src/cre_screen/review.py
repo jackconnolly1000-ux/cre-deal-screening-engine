@@ -23,7 +23,7 @@ from cre_screen.config import AppConfig
 from cre_screen.errors import OverrideError
 from cre_screen.ingest.reread import make_rereader
 from cre_screen.reconcile.context import CheckContext
-from cre_screen.reconcile.gate import run_gate
+from cre_screen.reconcile.gate import STRICT_MATH_CHECKS, run_gate
 from cre_screen.reconcile.metrics import normalize_unit_id
 from cre_screen.schemas.common import COABucket, to_cents
 from cre_screen.schemas.deal import DealPackage
@@ -59,6 +59,24 @@ def parse_edit(target: str) -> tuple[str, str]:
             f"edit_value target must be '<unit id>:<{'|'.join(EDIT_FIELDS)}>' (got {target!r})"
         )
     return unit_id, field
+
+
+ALLOWED_STRATEGIES = {
+    "resolve_footing": ("use_calculated_sum",),
+    "edit_value": ("use_stated_total", "edit_line_item"),
+}
+
+
+def require_strategy(override: Override) -> None:
+    """A data override aimed at a strict-math check must say which number governs."""
+    if override.check_id not in STRICT_MATH_CHECKS:
+        return
+    allowed = ALLOWED_STRATEGIES.get(override.action, ())
+    if override.resolution_strategy not in allowed:
+        raise OverrideError(
+            f"{override.check_id} {override.action} needs a resolution_strategy "
+            f"({' or '.join(allowed)}), got {override.resolution_strategy!r}"
+        )
 
 
 def money_value(override: Override) -> Decimal:
@@ -162,6 +180,8 @@ def apply_data_overrides(
 ) -> tuple[RentRoll, T12Statement | None]:
     """Apply the data overrides in order. Inputs are left untouched; applying twice is a no-op."""
     for override in overrides:
+        if override.action in ALLOWED_STRATEGIES:
+            require_strategy(override)
         if override.action == "remap_line":
             t12 = _remap(t12, *parse_remap(override.target))
         elif override.action == "edit_value":

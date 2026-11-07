@@ -154,18 +154,45 @@ def test_an_open_block_sends_the_deal_to_review() -> None:
     assert "1 open block" in result.gate_log[-1].reason
 
 
-def test_an_override_with_a_note_clears_the_deal_to_ready() -> None:
-    result = run_gate(context(fails()), overrides=[override()])
-    (finding,) = [f for f in result.findings if f.check_id == "RR_FOOTING"]
+def duplicated():
+    return roll([unit("101", row=1), unit("101", row=2)])
+
+
+def test_an_override_with_a_note_clears_a_non_math_block_to_ready() -> None:
+    result = run_gate(context(duplicated()), overrides=[override("RR_DUP_UNIT")])
+    (finding,) = [f for f in result.findings if f.check_id == "RR_DUP_UNIT"]
     assert finding.status == "overridden" and finding.reviewer_note == "owner confirmed total"
     assert result.final_state == "READY"
     assert states(result)[-1] == ("CHECKS", "READY")
 
 
-def test_clear_action_marks_the_finding_cleared() -> None:
-    result = run_gate(context(fails()), overrides=[override(action="clear")])
-    assert [f.status for f in result.findings] == ["cleared"]
-    assert result.final_state == "READY"
+def test_clear_action_marks_a_non_math_finding_cleared() -> None:
+    result = run_gate(context(duplicated()), overrides=[override("RR_DUP_UNIT", action="clear")])
+    (dup,) = [f for f in result.findings if f.check_id == "RR_DUP_UNIT"]
+    assert dup.status == "cleared" and result.final_state == "READY"
+
+
+@pytest.mark.parametrize("action", ["override", "clear"])
+def test_a_bare_override_of_a_footing_block_is_rejected_by_the_engine(action: str) -> None:
+    with pytest.raises(OverrideError, match=r"math failure.*resolution_strategy"):
+        run_gate(context(fails()), overrides=[override(action=action)])
+
+
+def test_a_footing_override_with_a_strategy_still_cannot_pass_as_a_status_change() -> None:
+    sneaky = override().model_copy(update={"resolution_strategy": "use_calculated_sum"})
+    with pytest.raises(OverrideError, match="math failure"):
+        run_gate(context(fails()), overrides=[sneaky])
+
+
+def test_the_t12_footing_block_is_also_strict_math() -> None:
+    from cre_screen.reconcile.gate import STRICT_MATH_CHECKS
+
+    assert STRICT_MATH_CHECKS == ("RR_FOOTING", "T12_FOOTING")
+
+
+def test_a_footing_override_with_nothing_to_match_is_still_ignored() -> None:
+    result = run_gate(context(foots()), overrides=[override()])
+    assert result.final_state == "READY" and result.findings == []
 
 
 def test_override_for_a_different_check_does_not_clear_the_block() -> None:
@@ -180,18 +207,13 @@ def test_override_targets_a_unit_or_a_line_label() -> None:
     assert miss.final_state == "REVIEW" and hit.final_state == "READY"
 
 
-def test_override_with_nothing_to_match_is_ignored() -> None:
-    result = run_gate(context(foots()), overrides=[override()])
-    assert result.final_state == "READY" and result.findings == []
-
-
 def test_note_shorter_than_the_configured_minimum_is_rejected() -> None:
     strict = tweak("review", override_note_min_chars=40)
     with pytest.raises(OverrideError, match="at least 40"):
-        run_gate(context(fails(), thresholds=strict), overrides=[override()])
+        run_gate(context(duplicated(), thresholds=strict), overrides=[override("RR_DUP_UNIT")])
 
 
-@pytest.mark.parametrize("action", ["edit_value", "remap_line"])
+@pytest.mark.parametrize("action", ["edit_value", "remap_line", "resolve_footing"])
 def test_data_changing_actions_belong_to_the_review_ui(action: str) -> None:
     with pytest.raises(OverrideError, match="review UI"):
         run_gate(context(fails()), overrides=[override(action=action)])
