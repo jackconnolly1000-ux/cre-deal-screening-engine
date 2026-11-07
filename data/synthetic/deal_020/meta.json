@@ -1,0 +1,13 @@
+{
+  "deal_id": "deal_020",
+  "deal_seed": 1035,
+  "property_name": "Hodges Commons Apartments",
+  "rr_format": "pdf_text",
+  "rr_layout": "rr_classic",
+  "scanned": false,
+  "seed": 1015,
+  "split": "heldout",
+  "t12_format": "xlsx",
+  "t12_layout": "t12_excel",
+  "traps": []
+}

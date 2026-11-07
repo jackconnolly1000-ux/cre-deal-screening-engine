@@ -1,0 +1,17 @@
+{
+  "deal_id": "deal_018",
+  "deal_seed": 1033,
+  "property_name": "Benjamin Flats Apartments",
+  "rr_format": "pdf_scanned",
+  "rr_layout": "rr_grouped",
+  "scanned": true,
+  "seed": 1015,
+  "split": "heldout",
+  "t12_format": "pdf_text",
+  "t12_layout": "t12_grid",
+  "traps": [
+    "TRAP_X_RENT_PUSH",
+    "TRAP_T12_FOOTING",
+    "TRAP_PF_MGMT_FEE"
+  ]
+}

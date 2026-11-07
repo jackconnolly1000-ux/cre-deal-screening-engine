@@ -1,0 +1,22 @@
+property_name: Haynes Court Apartments
+asking_price: '6980000.00'
+unit_count: 90
+vacancy_rate: '0.0525'
+mgmt_fee_pct: '0.040'
+source_note: Synthetic OM p.14, 'Pro Forma Year 1' table
+lines:
+  GROSS_POTENTIAL_RENT: '1321681.95'
+  LOSS_TO_LEASE: '-99854.20'
+  VACANCY_LOSS: '-69388.30'
+  OTHER_INCOME: '73806.49'
+  REAL_ESTATE_TAXES: '223783.56'
+  INSURANCE: '68738.67'
+  UTILITIES: '120950.90'
+  REPAIRS_MAINTENANCE: '59049.98'
+  TURNOVER: '39537.68'
+  CONTRACT_SERVICES: '29445.18'
+  PAYROLL: '126076.00'
+  MANAGEMENT_FEE: '49049.84'
+  GENERAL_ADMIN: '33672.42'
+  MARKETING: '8464.43'
+  CAPEX_RESERVES: '26396.37'

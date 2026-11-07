@@ -1,0 +1,22 @@
+property_name: Hodges Commons Apartments
+asking_price: '5890000.00'
+unit_count: 41
+vacancy_rate: '0.0538'
+mgmt_fee_pct: '0.032'
+source_note: Synthetic OM p.14, 'Pro Forma Year 1' table
+lines:
+  GROSS_POTENTIAL_RENT: '719304.17'
+  LOSS_TO_LEASE: '-40363.18'
+  VACANCY_LOSS: '-38698.56'
+  OTHER_INCOME: '29559.40'
+  REAL_ESTATE_TAXES: '102983.14'
+  INSURANCE: '33650.01'
+  UTILITIES: '44857.46'
+  REPAIRS_MAINTENANCE: '34322.48'
+  TURNOVER: '10829.84'
+  CONTRACT_SERVICES: '15290.70'
+  PAYROLL: '54247.06'
+  MANAGEMENT_FEE: '21433.66'
+  GENERAL_ADMIN: '14830.31'
+  MARKETING: '7768.14'
+  CAPEX_RESERVES: '16430.83'

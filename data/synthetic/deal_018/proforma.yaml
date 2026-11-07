@@ -1,0 +1,22 @@
+property_name: Benjamin Flats Apartments
+asking_price: '9160000.00'
+unit_count: 58
+vacancy_rate: '0.0558'
+mgmt_fee_pct: '0.02'
+source_note: Synthetic OM p.14, 'Pro Forma Year 1' table
+lines:
+  GROSS_POTENTIAL_RENT: '1158557.73'
+  LOSS_TO_LEASE: '-46161.50'
+  VACANCY_LOSS: '-64647.52'
+  OTHER_INCOME: '28525.60'
+  REAL_ESTATE_TAXES: '147883.99'
+  INSURANCE: '47892.92'
+  UTILITIES: '73393.58'
+  REPAIRS_MAINTENANCE: '29888.74'
+  TURNOVER: '14908.33'
+  CONTRACT_SERVICES: '15910.26'
+  PAYROLL: '94126.94'
+  MANAGEMENT_FEE: '21525.49'
+  GENERAL_ADMIN: '16204.87'
+  MARKETING: '9806.46'
+  CAPEX_RESERVES: '14951.90'

@@ -1,0 +1,22 @@
+property_name: Rubio Flats Apartments
+asking_price: '6240000.00'
+unit_count: 63
+vacancy_rate: '0.0907'
+mgmt_fee_pct: '0.036'
+source_note: Synthetic OM p.14, 'Pro Forma Year 1' table Tax appeal pending.
+lines:
+  GROSS_POTENTIAL_RENT: '1008245.40'
+  LOSS_TO_LEASE: '-61430.40'
+  VACANCY_LOSS: '-91447.86'
+  OTHER_INCOME: '29836.07'
+  REAL_ESTATE_TAXES: '120149.57'
+  INSURANCE: '54682.99'
+  UTILITIES: '62438.45'
+  REPAIRS_MAINTENANCE: '64812.37'
+  TURNOVER: '16995.55'
+  CONTRACT_SERVICES: '20089.14'
+  PAYROLL: '100925.16'
+  MANAGEMENT_FEE: '31867.32'
+  GENERAL_ADMIN: '21917.68'
+  MARKETING: '10454.44'
+  CAPEX_RESERVES: '17823.08'

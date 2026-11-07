@@ -1,0 +1,17 @@
+{
+  "deal_id": "deal_017",
+  "deal_seed": 1032,
+  "property_name": "Hughes Gardens Apartments",
+  "rr_format": "xlsx",
+  "rr_layout": "rr_excel",
+  "scanned": false,
+  "seed": 1015,
+  "split": "heldout",
+  "t12_format": "xlsx",
+  "t12_layout": "t12_excel",
+  "traps": [
+    "TRAP_RR_EXPIRED_LEASE",
+    "TRAP_RR_HIDDEN_CONCESSION",
+    "TRAP_PF_VACANCY"
+  ]
+}

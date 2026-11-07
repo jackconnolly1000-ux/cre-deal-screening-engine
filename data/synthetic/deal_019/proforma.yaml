@@ -1,0 +1,22 @@
+property_name: Morrow Commons Apartments
+asking_price: '3030000.00'
+unit_count: 35
+vacancy_rate: '0.0642'
+mgmt_fee_pct: '0.042'
+source_note: Synthetic OM p.14, 'Pro Forma Year 1' table
+lines:
+  GROSS_POTENTIAL_RENT: '536816.27'
+  LOSS_TO_LEASE: '-37552.68'
+  VACANCY_LOSS: '-34463.60'
+  OTHER_INCOME: '26636.35'
+  REAL_ESTATE_TAXES: '81415.95'
+  INSURANCE: '23321.06'
+  UTILITIES: '43669.28'
+  REPAIRS_MAINTENANCE: '30995.19'
+  TURNOVER: '11835.62'
+  CONTRACT_SERVICES: '13167.21'
+  PAYROLL: '62085.45'
+  MANAGEMENT_FEE: '20640.33'
+  GENERAL_ADMIN: '11870.65'
+  MARKETING: '4556.10'
+  CAPEX_RESERVES: '7366.16'

@@ -1,0 +1,17 @@
+{
+  "deal_id": "deal_019",
+  "deal_seed": 1034,
+  "property_name": "Morrow Commons Apartments",
+  "rr_format": "xlsx",
+  "rr_layout": "rr_excel",
+  "scanned": false,
+  "seed": 1015,
+  "split": "heldout",
+  "t12_format": "pdf_text",
+  "t12_layout": "t12_sections",
+  "traps": [
+    "TRAP_RR_ZERO_RENT",
+    "TRAP_T12_SPIKE",
+    "TRAP_PF_INS_DROP"
+  ]
+}

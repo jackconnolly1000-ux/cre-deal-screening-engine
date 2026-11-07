@@ -1,0 +1,22 @@
+property_name: Hughes Gardens Apartments
+asking_price: '14920000.00'
+unit_count: 93
+vacancy_rate: '0.026'
+mgmt_fee_pct: '0.035'
+source_note: Synthetic OM p.14, 'Pro Forma Year 1' table
+lines:
+  GROSS_POTENTIAL_RENT: '1818180.55'
+  LOSS_TO_LEASE: '-103259.95'
+  VACANCY_LOSS: '-47272.69'
+  OTHER_INCOME: '69527.96'
+  REAL_ESTATE_TAXES: '232210.96'
+  INSURANCE: '59222.21'
+  UTILITIES: '117314.15'
+  REPAIRS_MAINTENANCE: '53953.41'
+  TURNOVER: '33485.38'
+  CONTRACT_SERVICES: '30362.16'
+  PAYROLL: '113768.72'
+  MANAGEMENT_FEE: '57154.79'
+  GENERAL_ADMIN: '21780.93'
+  MARKETING: '18518.74'
+  CAPEX_RESERVES: '25167.10'
