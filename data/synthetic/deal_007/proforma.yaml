@@ -1,0 +1,22 @@
+property_name: Rodriguez Terrace Apartments
+asking_price: '13290000.00'
+unit_count: 91
+vacancy_rate: '0.0610'
+mgmt_fee_pct: '0.02'
+source_note: Synthetic OM p.14, 'Pro Forma Year 1' table
+lines:
+  GROSS_POTENTIAL_RENT: '1578777.30'
+  LOSS_TO_LEASE: '-103339.02'
+  VACANCY_LOSS: '-96305.42'
+  OTHER_INCOME: '77921.91'
+  REAL_ESTATE_TAXES: '160662.68'
+  INSURANCE: '51973.74'
+  UTILITIES: '108037.42'
+  REPAIRS_MAINTENANCE: '72328.34'
+  TURNOVER: '34986.50'
+  CONTRACT_SERVICES: '25621.19'
+  PAYROLL: '154542.43'
+  MANAGEMENT_FEE: '29141.10'
+  GENERAL_ADMIN: '22492.47'
+  MARKETING: '13444.34'
+  CAPEX_RESERVES: '29542.97'

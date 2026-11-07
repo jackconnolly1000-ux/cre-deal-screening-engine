@@ -1,0 +1,22 @@
+property_name: Green Flats Apartments
+asking_price: '7650000.00'
+unit_count: 61
+vacancy_rate: '0.027'
+mgmt_fee_pct: '0.037'
+source_note: Synthetic OM p.14, 'Pro Forma Year 1' table
+lines:
+  GROSS_POTENTIAL_RENT: '1000250.55'
+  LOSS_TO_LEASE: '-61972.95'
+  VACANCY_LOSS: '-27006.76'
+  OTHER_INCOME: '24076.24'
+  REAL_ESTATE_TAXES: '120895.66'
+  INSURANCE: '33629.54'
+  UTILITIES: '63060.08'
+  REPAIRS_MAINTENANCE: '47894.30'
+  TURNOVER: '19808.10'
+  CONTRACT_SERVICES: '12434.42'
+  PAYROLL: '80501.44'
+  MANAGEMENT_FEE: '32313.27'
+  GENERAL_ADMIN: '16533.44'
+  MARKETING: '11250.61'
+  CAPEX_RESERVES: '18801.87'

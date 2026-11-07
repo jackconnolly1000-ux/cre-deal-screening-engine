@@ -1,0 +1,22 @@
+property_name: White Commons Apartments
+asking_price: '7070000.00'
+unit_count: 39
+vacancy_rate: '0.0553'
+mgmt_fee_pct: '0.037'
+source_note: Synthetic OM p.14, 'Pro Forma Year 1' table
+lines:
+  GROSS_POTENTIAL_RENT: '780180.66'
+  LOSS_TO_LEASE: '-57216.60'
+  VACANCY_LOSS: '-43143.99'
+  OTHER_INCOME: '35418.68'
+  REAL_ESTATE_TAXES: '99595.86'
+  INSURANCE: '26799.05'
+  UTILITIES: '39010.72'
+  REPAIRS_MAINTENANCE: '26317.18'
+  TURNOVER: '12424.43'
+  CONTRACT_SERVICES: '8247.07'
+  PAYROLL: '70282.34'
+  MANAGEMENT_FEE: '26463.83'
+  GENERAL_ADMIN: '10586.65'
+  MARKETING: '6572.22'
+  CAPEX_RESERVES: '14883.96'

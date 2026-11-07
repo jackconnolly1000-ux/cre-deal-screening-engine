@@ -1,0 +1,17 @@
+{
+  "deal_id": "deal_014",
+  "deal_seed": 21,
+  "property_name": "Martin Court Apartments",
+  "rr_format": "pdf_text",
+  "rr_layout": "rr_classic",
+  "scanned": false,
+  "seed": 7,
+  "split": "dev",
+  "t12_format": "pdf_text",
+  "t12_layout": "t12_grid",
+  "traps": [
+    "TRAP_RR_HIDDEN_CONCESSION",
+    "TRAP_T12_ONE_TIME_INCOME",
+    "TRAP_RR_DUP_UNIT"
+  ]
+}

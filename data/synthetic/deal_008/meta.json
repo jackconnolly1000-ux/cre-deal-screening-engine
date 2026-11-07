@@ -1,0 +1,17 @@
+{
+  "deal_id": "deal_008",
+  "deal_seed": 15,
+  "property_name": "Sanford Commons Apartments",
+  "rr_format": "pdf_text",
+  "rr_layout": "rr_classic",
+  "scanned": false,
+  "seed": 7,
+  "split": "dev",
+  "t12_format": "pdf_text",
+  "t12_layout": "t12_grid",
+  "traps": [
+    "TRAP_RR_EXPIRED_LEASE",
+    "TRAP_T12_SPIKE",
+    "TRAP_PF_INS_DROP"
+  ]
+}

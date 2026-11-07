@@ -1,0 +1,22 @@
+property_name: Ward Commons Apartments
+asking_price: '14460000.00'
+unit_count: 84
+vacancy_rate: '0.028'
+mgmt_fee_pct: '0.043'
+source_note: Synthetic OM p.14, 'Pro Forma Year 1' table
+lines:
+  GROSS_POTENTIAL_RENT: '1703229.72'
+  LOSS_TO_LEASE: '-84413.08'
+  VACANCY_LOSS: '-47690.43'
+  OTHER_INCOME: '46689.55'
+  REAL_ESTATE_TAXES: '127972.66'
+  INSURANCE: '65329.99'
+  UTILITIES: '100546.98'
+  REPAIRS_MAINTENANCE: '71234.93'
+  TURNOVER: '37079.49'
+  CONTRACT_SERVICES: '32789.38'
+  PAYROLL: '118679.29'
+  MANAGEMENT_FEE: '64995.97'
+  GENERAL_ADMIN: '31404.86'
+  MARKETING: '13486.97'
+  CAPEX_RESERVES: '18568.37'

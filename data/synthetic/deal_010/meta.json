@@ -1,0 +1,17 @@
+{
+  "deal_id": "deal_010",
+  "deal_seed": 17,
+  "property_name": "Boyd Commons Apartments",
+  "rr_format": "pdf_text",
+  "rr_layout": "rr_classic",
+  "scanned": false,
+  "seed": 7,
+  "split": "dev",
+  "t12_format": "pdf_text",
+  "t12_layout": "t12_grid",
+  "traps": [
+    "TRAP_T12_FOOTING",
+    "TRAP_RR_DUP_UNIT",
+    "TRAP_PF_MGMT_FEE"
+  ]
+}

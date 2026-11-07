@@ -1,0 +1,16 @@
+{
+  "deal_id": "deal_011",
+  "deal_seed": 18,
+  "property_name": "White Commons Apartments",
+  "rr_format": "pdf_text",
+  "rr_layout": "rr_classic",
+  "scanned": false,
+  "seed": 7,
+  "split": "dev",
+  "t12_format": "pdf_text",
+  "t12_layout": "t12_grid",
+  "traps": [
+    "TRAP_X_RENT_PUSH",
+    "TRAP_T12_ONE_TIME_INCOME"
+  ]
+}

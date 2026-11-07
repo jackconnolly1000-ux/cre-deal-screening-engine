@@ -1,0 +1,22 @@
+property_name: Bullock Flats Apartments
+asking_price: '5980000.00'
+unit_count: 57
+vacancy_rate: '0.0617'
+mgmt_fee_pct: '0.048'
+source_note: Synthetic OM p.14, 'Pro Forma Year 1' table
+lines:
+  GROSS_POTENTIAL_RENT: '870867.94'
+  LOSS_TO_LEASE: '-58303.76'
+  VACANCY_LOSS: '-53732.55'
+  OTHER_INCOME: '33183.22'
+  REAL_ESTATE_TAXES: '93947.40'
+  INSURANCE: '47603.84'
+  UTILITIES: '84154.91'
+  REPAIRS_MAINTENANCE: '36777.90'
+  TURNOVER: '25469.83'
+  CONTRACT_SERVICES: '18184.76'
+  PAYROLL: '69968.76'
+  MANAGEMENT_FEE: '38016.71'
+  GENERAL_ADMIN: '16990.29'
+  MARKETING: '7961.10'
+  CAPEX_RESERVES: '18273.92'
