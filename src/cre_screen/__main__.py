@@ -15,6 +15,7 @@ from cre_screen.errors import BudgetExceededError, CacheMissError, CreScreenErro
 from cre_screen.export.excel_writer import write_workbook
 from cre_screen.extract.rent_roll import build_rent_roll
 from cre_screen.extract.t12 import build_t12
+from cre_screen.ingest.excel_tables import extract_excel_t12_table
 from cre_screen.ingest.parse import parse_date
 from cre_screen.ingest.pdf_tables import extract_pdf_t12_table
 from cre_screen.ingest.router import detect_format
@@ -53,7 +54,7 @@ def cmd_extract_rr(args: argparse.Namespace) -> int:
     deal_dir: Path = args.deal_dir
     path = find_input(deal_dir, "rent_roll")
     assert path is not None
-    table = read_rr_table(path, cfg, args.sheet, CACHE_DIR)
+    table = read_rr_table(path, cfg, args.sheet, CACHE_DIR, llm)
     header_map, header_warnings = map_headers(
         table.headers, sample_rows(table), cfg.rr_headers, llm
     )
@@ -109,9 +110,12 @@ def cmd_extract_t12(args: argparse.Namespace) -> int:
     path = find_input(deal_dir, "t12")
     assert path is not None
     fmt = detect_format(path)
-    if fmt != "pdf_text":
-        raise CreScreenError(f"{path.name}: only text-layer PDF T-12s are supported so far ({fmt})")
-    table = extract_pdf_t12_table(path, cfg.coa, cache_dir=CACHE_DIR)
+    if fmt == "pdf_scanned":
+        raise CreScreenError(f"{path.name}: scanned T-12s are out of scope for v1")
+    if fmt == "xlsx":
+        table = extract_excel_t12_table(path, cfg.coa, sheet=args.sheet)
+    else:
+        table = extract_pdf_t12_table(path, cfg.coa, cache_dir=CACHE_DIR)
     t12 = build_t12(table, cfg, llm=llm, learned=load_learned(LEARNED))
 
     print(f"{deal_dir.name}: {path.name} ({t12.source_format}, {table.page_count} page(s))")

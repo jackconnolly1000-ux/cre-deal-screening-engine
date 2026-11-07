@@ -72,3 +72,31 @@ class FakeLLMClient:
                 f"expected {response_model.__name__}"
             )
         return best
+
+
+class CannedCoaLLM:
+    """Answers the only label the synonym table cannot place: a one-time income line.
+
+    Used where a test runs whole deals offline. Anything other than a ``coa_map`` request is a
+    test bug, so it raises instead of guessing.
+    """
+
+    def __init__(self) -> None:
+        self.requests: list[list[str]] = []
+
+    def structured(self, *, task: str, response_model: Any, system: str, user_content, model=None):
+        import json
+
+        from cre_screen.schemas.mapping import COAMapping, COAMappingBatch
+
+        assert task == "coa_map", f"unexpected LLM task {task}"
+        labels = json.loads(user_content[0]["text"].split("Labels:\n")[-1])
+        self.requests.append(labels)
+        return COAMappingBatch(
+            mappings=[
+                COAMapping(
+                    line_label=x, bucket="OTHER_INCOME", is_nonrecurring=True, rationale="canned"
+                )
+                for x in labels
+            ]
+        )
