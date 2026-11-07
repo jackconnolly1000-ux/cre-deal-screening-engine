@@ -22,7 +22,8 @@ APPLIED_BY_UI = ("edit_value", "remap_line", "resolve_footing")
 STATUS_FOR_ACTION = {"clear": "cleared", "override": "overridden"}
 # Checks whose block findings are arithmetic: a note cannot make the numbers foot. They can only be
 # resolved by correcting data, which needs a resolution_strategy (see review.apply_data_overrides).
-STRICT_MATH_CHECKS = ("RR_FOOTING", "T12_FOOTING")
+# T12_FOOTING is not listed: the UI has no T-12 line editor, so analysts accept it with a note.
+STRICT_MATH_CHECKS = ("RR_FOOTING",)
 
 
 @dataclass

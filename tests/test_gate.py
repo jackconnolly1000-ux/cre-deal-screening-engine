@@ -10,7 +10,7 @@ from cre_screen.reconcile.checks import REGISTRY
 from cre_screen.reconcile.gate import run_gate
 from cre_screen.reconcile.reread import RereadResult
 from cre_screen.schemas.findings import Override
-from tests.builders import context, roll, subtotal, tweak, unit
+from tests.builders import context, line, roll, subtotal, t12, tweak, unit
 
 D = Decimal
 NOW = datetime(2026, 9, 30, 12, 0, tzinfo=UTC)
@@ -184,10 +184,19 @@ def test_a_footing_override_with_a_strategy_still_cannot_pass_as_a_status_change
         run_gate(context(fails()), overrides=[sneaky])
 
 
-def test_the_t12_footing_block_is_also_strict_math() -> None:
+def test_only_rent_roll_footing_is_strict_math() -> None:
     from cre_screen.reconcile.gate import STRICT_MATH_CHECKS
 
-    assert STRICT_MATH_CHECKS == ("RR_FOOTING", "T12_FOOTING")
+    assert STRICT_MATH_CHECKS == ("RR_FOOTING",)
+
+
+def test_a_t12_footing_block_can_be_accepted_with_a_note() -> None:
+    broken = t12([line("Rent", "GROSS_POTENTIAL_RENT", "100.00", stated="1500.00")])
+    open_ = run_gate(context(foots(), t12=broken))
+    assert [f.check_id for f in open_.findings if f.severity == "block"] == ["T12_FOOTING"]
+    accepted = run_gate(context(foots(), t12=broken), overrides=[override("T12_FOOTING")])
+    (finding,) = [f for f in accepted.findings if f.check_id == "T12_FOOTING"]
+    assert finding.status == "overridden" and accepted.final_state == "READY"
 
 
 def test_a_footing_override_with_nothing_to_match_is_still_ignored() -> None:
