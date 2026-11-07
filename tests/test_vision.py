@@ -313,3 +313,30 @@ def test_make_rereader_builds_a_vision_reader_for_scans_when_a_client_exists(
 ) -> None:
     assert isinstance(make_rereader(scanned_pdf, rent_roll, FakeLLMClient()), VisionRereader)
     assert make_rereader(scanned_pdf, rent_roll) is None
+
+
+# ---------- the prompt ----------
+
+
+def spec_prompt_block(name: str) -> str:
+    """The fenced text block under the heading for the template in SPEC section 14."""
+    spec = (Path(__file__).resolve().parents[1] / "SPEC.md").read_text(encoding="utf-8")
+    start = spec.index(f"**`{name}.md`**")
+    fence = spec.index("```text", start) + len("```text")
+    return spec[fence : spec.index("```", fence)].strip()
+
+
+@pytest.mark.parametrize("name", ["vision_page", "header_map", "coa_map", "concession"])
+def test_prompt_templates_match_spec_section_14_exactly(name: str) -> None:
+    template = (
+        Path(__file__).resolve().parents[1]
+        / "src" / "cre_screen" / "mapping" / "prompts" / f"{name}.md"
+    ).read_text(encoding="utf-8")  # fmt: skip
+    assert template.strip() == spec_prompt_block(name)
+
+
+def test_the_vision_prompt_asks_for_title_lines_as_other_rows() -> None:
+    from cre_screen.mapping.prompts import render_prompt
+
+    text = render_prompt("vision_page")
+    assert "title line" in text and "As of" in text and "row_kind other" in text

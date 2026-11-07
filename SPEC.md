@@ -1270,6 +1270,7 @@ Rows with `kind == "subtotal"` matching `subtotal_labels` become `StatedSubtotal
 - Render each page at 110 dpi with `render.render_page_png`. Send as an Anthropic image content block (base64 PNG) with `task="vision_page"`, response model `VisionTablePage`.
 - Convert to `RawTable` (no bbox; citation page and row_index only) and continue through 7.2 and 7.3 unchanged. Every citation gets `provenance="llm_vision"`.
 - Each page is a separate call so a prompt stays far below `max_prompt_tokens`.
+- Title lines come back as `other` rows before the first header row on page 1; they become `RawTable.preamble_text`, which is where the as-of date is read.
 
 ### 7.7 LLM client, cache, cost (`mapping/llm_client.py`, `cache.py`, `cost.py`)
 
@@ -1968,6 +1969,7 @@ Return the header texts exactly as printed and every row.
 For each row, give each cell's text exactly as printed, including $ signs, commas and parentheses.
 Use an empty string for a blank cell. Do not compute, correct or total anything.
 Mark rows that are subtotals, repeated headers or footnotes with the matching row_kind.
+Also return every title line printed above the table (property name, report title, the "As of" date) as its own row with row_kind other, in reading order, with the line's exact text as the value of its first cell.
 ```
 
 ---

@@ -17,7 +17,7 @@
     "false_positives": 0,
     "clean_control_findings": 0,
     "cost_usd": "0",
-    "wall_seconds": 0.152,
+    "wall_seconds": 0.146,
     "misses": []
   },
   {
@@ -38,7 +38,7 @@
     "false_positives": 0,
     "clean_control_findings": 0,
     "cost_usd": "0",
-    "wall_seconds": 0.133,
+    "wall_seconds": 0.132,
     "misses": []
   },
   {
@@ -59,7 +59,7 @@
     "false_positives": 0,
     "clean_control_findings": 0,
     "cost_usd": "0",
-    "wall_seconds": 0.141,
+    "wall_seconds": 0.139,
     "misses": []
   },
   {
@@ -80,7 +80,7 @@
     "false_positives": 0,
     "clean_control_findings": 0,
     "cost_usd": "0",
-    "wall_seconds": 0.194,
+    "wall_seconds": 0.198,
     "misses": []
   },
   {
@@ -101,7 +101,7 @@
     "false_positives": 0,
     "clean_control_findings": 0,
     "cost_usd": "0",
-    "wall_seconds": 0.226,
+    "wall_seconds": 0.231,
     "misses": []
   },
   {
@@ -122,7 +122,7 @@
     "false_positives": 0,
     "clean_control_findings": 0,
     "cost_usd": "0",
-    "wall_seconds": 0.251,
+    "wall_seconds": 0.238,
     "misses": []
   },
   {
@@ -164,7 +164,7 @@
     "false_positives": 0,
     "clean_control_findings": 0,
     "cost_usd": "0",
-    "wall_seconds": 0.053,
+    "wall_seconds": 0.054,
     "misses": []
   },
   {
@@ -185,7 +185,7 @@
     "false_positives": 0,
     "clean_control_findings": 0,
     "cost_usd": "0",
-    "wall_seconds": 0.06,
+    "wall_seconds": 0.062,
     "misses": []
   },
   {
@@ -206,7 +206,7 @@
     "false_positives": 0,
     "clean_control_findings": 0,
     "cost_usd": "0",
-    "wall_seconds": 0.096,
+    "wall_seconds": 0.075,
     "misses": []
   },
   {
@@ -227,7 +227,7 @@
     "false_positives": 0,
     "clean_control_findings": 0,
     "cost_usd": "0",
-    "wall_seconds": 0.058,
+    "wall_seconds": 0.078,
     "misses": []
   },
   {
@@ -248,7 +248,7 @@
     "false_positives": 0,
     "clean_control_findings": 0,
     "cost_usd": "0",
-    "wall_seconds": 0.066,
+    "wall_seconds": 0.064,
     "misses": []
   },
   {
@@ -269,7 +269,7 @@
     "false_positives": 0,
     "clean_control_findings": 0,
     "cost_usd": "0",
-    "wall_seconds": 0.113,
+    "wall_seconds": 0.105,
     "misses": []
   },
   {
@@ -290,7 +290,7 @@
     "false_positives": 0,
     "clean_control_findings": 0,
     "cost_usd": "0",
-    "wall_seconds": 0.156,
+    "wall_seconds": 0.135,
     "misses": []
   }
 ]

@@ -1,7 +1,7 @@
 {
-  "cost_usd": "0.0019651",
-  "created_at": "2026-11-07T01:31:56+00:00",
-  "key": "00a4d25b3f280181b04dfaccfd3becfec34ce8ee7eb0a9d5586de52f3308830e",
+  "cost_usd": "0.0020409",
+  "created_at": "2026-11-07T01:47:29+00:00",
+  "key": "0bf0eb539f1281bb7b57ba54dd3f7a30f7ae9d58da634750489bf46dd641c224",
   "model": "claude-haiku-5-5",
   "response": {
     "headers": [
@@ -18,6 +18,22 @@
       "Specials"
     ],
     "rows": [
+      {
+        "cells": {
+          "Apt #": "Boyd Commons Apartments - Rent Roll (continued)",
+          "Baths": "",
+          "Beds": "",
+          "Charged Rent": "",
+          "Floor Plan": "",
+          "Lease Expiration": "",
+          "Move-In": "",
+          "Occ Status": "",
+          "Scheduled Rent": "",
+          "Specials": "",
+          "Sq Ft": ""
+        },
+        "row_kind": "other"
+      },
       {
         "cells": {
           "Apt #": "207",
@@ -343,7 +359,7 @@
   "task": "vision_page",
   "usage": {
     "attempts": 1,
-    "input_tokens": 3681,
-    "output_tokens": 3194
+    "input_tokens": 3739,
+    "output_tokens": 3334
   }
 }

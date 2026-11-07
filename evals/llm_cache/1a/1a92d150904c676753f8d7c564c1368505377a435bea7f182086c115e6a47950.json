@@ -1,7 +1,7 @@
 {
-  "cost_usd": "0.0019701",
-  "created_at": "2026-11-07T01:31:38+00:00",
-  "key": "05c3d884d0c6b6be2719b72d51ebd4993934a486a828b76a717a71654e07c0f1",
+  "cost_usd": "0.0021669",
+  "created_at": "2026-11-07T01:47:11+00:00",
+  "key": "1a92d150904c676753f8d7c564c1368505377a435bea7f182086c115e6a47950",
   "model": "claude-haiku-5-5",
   "response": {
     "headers": [
@@ -18,6 +18,54 @@
       "Specials"
     ],
     "rows": [
+      {
+        "cells": {
+          "Apt #": "Boyd Commons Apartments",
+          "Baths": "",
+          "Beds": "",
+          "Charged Rent": "",
+          "Floor Plan": "",
+          "Lease Expiration": "",
+          "Move-In": "",
+          "Occ Status": "",
+          "Scheduled Rent": "",
+          "Specials": "",
+          "Sq Ft": ""
+        },
+        "row_kind": "other"
+      },
+      {
+        "cells": {
+          "Apt #": "Rent Roll",
+          "Baths": "",
+          "Beds": "",
+          "Charged Rent": "",
+          "Floor Plan": "",
+          "Lease Expiration": "",
+          "Move-In": "",
+          "Occ Status": "",
+          "Scheduled Rent": "",
+          "Specials": "",
+          "Sq Ft": ""
+        },
+        "row_kind": "other"
+      },
+      {
+        "cells": {
+          "Apt #": "As of 31-Oct-2026",
+          "Baths": "",
+          "Beds": "",
+          "Charged Rent": "",
+          "Floor Plan": "",
+          "Lease Expiration": "",
+          "Move-In": "",
+          "Occ Status": "",
+          "Scheduled Rent": "",
+          "Specials": "",
+          "Sq Ft": ""
+        },
+        "row_kind": "other"
+      },
       {
         "cells": {
           "Apt #": "101",
@@ -343,7 +391,7 @@
   "task": "vision_page",
   "usage": {
     "attempts": 1,
-    "input_tokens": 3681,
-    "output_tokens": 3204
+    "input_tokens": 3739,
+    "output_tokens": 3586
   }
 }

@@ -1,7 +1,7 @@
 {
-  "cost_usd": "0.0018456",
-  "created_at": "2026-11-07T01:32:19+00:00",
-  "key": "c7d401cc67f227b2cae16dbc38afe616903376c8bd0067bcf7be0828f62fae84",
+  "cost_usd": "0.0019659",
+  "created_at": "2026-11-07T01:47:53+00:00",
+  "key": "857ce7665cfee27e6a1770e4f5c2639a9f53d5d8e2196f270427fa8d8d330b30",
   "model": "claude-haiku-5-5",
   "response": {
     "headers": [
@@ -18,6 +18,22 @@
       "Concession"
     ],
     "rows": [
+      {
+        "cells": {
+          "Apt #": "White Commons Apartments - Rent Roll (continued)",
+          "BR": "",
+          "Ba": "",
+          "Concession": "",
+          "Contract Rent": "",
+          "Floorplan": "",
+          "Lease Exp": "",
+          "Market": "",
+          "Move In": "",
+          "Occ Status": "",
+          "SF": ""
+        },
+        "row_kind": "other"
+      },
       {
         "cells": {
           "Apt #": "305",
@@ -340,7 +356,23 @@
       },
       {
         "cells": {
-          "Apt #": "Rents are scheduled monthly amounts in US dollars. Vacant units show no lease dates or in-place rent.",
+          "Apt #": "Rents are scheduled monthly amounts in US dollars.",
+          "BR": "",
+          "Ba": "",
+          "Concession": "",
+          "Contract Rent": "",
+          "Floorplan": "",
+          "Lease Exp": "",
+          "Market": "",
+          "Move In": "",
+          "Occ Status": "",
+          "SF": ""
+        },
+        "row_kind": "footnote"
+      },
+      {
+        "cells": {
+          "Apt #": "Vacant units show no lease dates or in-place rent.",
           "BR": "",
           "Ba": "",
           "Concession": "",
@@ -359,7 +391,7 @@
   "task": "vision_page",
   "usage": {
     "attempts": 1,
-    "input_tokens": 3681,
-    "output_tokens": 2955
+    "input_tokens": 3739,
+    "output_tokens": 3184
   }
 }
