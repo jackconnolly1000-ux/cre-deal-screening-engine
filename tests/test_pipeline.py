@@ -70,12 +70,30 @@ def test_overrides_clear_the_block_and_are_stored(tmp_path: Path) -> None:
     assert {f.status for f in pkg.findings if f.check_id == "RR_FOOTING"} == {"overridden"}
 
 
-def test_data_changing_overrides_are_rejected_with_a_clear_error(tmp_path: Path) -> None:
+def test_a_malformed_data_override_is_rejected_with_a_clear_error(tmp_path: Path) -> None:
     edit = Override(
         check_id="RR_FOOTING", action="edit_value", target="101", note="typo in the rent", at=NOW
     )
-    with pytest.raises(OverrideError, match="review UI"):
+    with pytest.raises(OverrideError, match="edit_value target must be"):
         run("deal_003", tmp_path, overrides=[edit])
+
+
+def test_a_valid_edit_override_changes_the_value_and_reruns_the_gate_from_footing(
+    tmp_path: Path,
+) -> None:
+    fix = Override(
+        check_id="RR_FOOTING",
+        action="edit_value",
+        target="204:in_place_rent=1500.00",
+        note="rent was blank in the scan",
+        at=NOW,
+    )
+    pkg = run("deal_003", tmp_path, overrides=[fix])
+    unit = next(u for u in pkg.rent_roll.units if u.unit_id == "204")
+    assert unit.in_place_rent == Decimal("1500.00")
+    assert unit.citations["in_place_rent"].provenance == "manual_override"
+    assert pkg.overrides == [fix] and pkg.gate_log[0].from_state == "FOOTING"
+    assert "RR_ZERO_RENT_OCC" not in {f.check_id for f in pkg.findings if f.severity == "warn"}
 
 
 def test_llm_is_used_only_for_labels_the_synonym_table_misses(tmp_path: Path) -> None:

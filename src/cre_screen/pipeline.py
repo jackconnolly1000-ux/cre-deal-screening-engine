@@ -26,6 +26,7 @@ from cre_screen.mapping.llm_protocol import LLMClient
 from cre_screen.mapping.vision import vision_table
 from cre_screen.reconcile.context import CheckContext
 from cre_screen.reconcile.gate import run_gate
+from cre_screen.review import apply_data_overrides, status_overrides
 from cre_screen.schemas.deal import DealPackage
 from cre_screen.schemas.findings import Override
 from cre_screen.schemas.t12 import T12Statement
@@ -119,11 +120,16 @@ def run_deal(
     if resolved is None:
         raise CreScreenError("no as-of date found in the document; pass --as-of YYYY-MM-DD")
     rent_roll = rent_roll.model_copy(update={"as_of_date": resolved})
+    rent_roll, t12 = apply_data_overrides(rent_roll, t12, overrides or [])
 
     ctx = CheckContext(
         rent_roll=rent_roll, t12=t12, proforma=proforma, thresholds=cfg.thresholds, as_of=resolved
     )
-    result = run_gate(ctx, reread=make_rereader(rr_path, rent_roll, llm), overrides=overrides or [])
+    result = run_gate(
+        ctx,
+        reread=make_rereader(rr_path, rent_roll, llm),
+        overrides=status_overrides(overrides or []),
+    )
 
     created = datetime.now(UTC)
     run_id = tracker.run_id if tracker else f"{created:%Y%m%dT%H%M%S}-{uuid.uuid4().hex[:8]}"
