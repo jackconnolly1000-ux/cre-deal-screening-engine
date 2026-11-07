@@ -197,3 +197,32 @@ def test_learned_file_with_wrong_shape_is_a_config_error(tmp_path: Path) -> None
 )
 def test_subtotal_kind(label: str, kind: str | None) -> None:
     assert subtotal_kind(label, COA) == kind
+
+
+@pytest.mark.parametrize(
+    "label",
+    [
+        "Court / Eviction",
+        "court & eviction",
+        "Court Costs",
+        "Eviction Fees",
+        "Eviction Costs",
+        "Legal",
+        "Legal Fees",
+        "Legal & Professional",
+        "Professional Fees",
+        "Filing Fees",
+    ],
+)
+def test_legal_and_eviction_labels_map_to_general_admin_without_a_model_call(label: str) -> None:
+    fake = FakeLLMClient()
+    (m,) = map_labels([label], COA, fake).values()
+    assert fake.calls == []
+    assert (m.bucket, m.source) == ("GENERAL_ADMIN", "synonym_table")
+    assert m.is_nonrecurring is False
+
+
+def test_a_legal_recovery_is_still_flagged_one_time() -> None:
+    llm = Scripted(answer(("Legal Recovery", "OTHER_INCOME", False)))
+    (m,) = map_labels(["Legal Recovery"], COA, llm).values()
+    assert m.is_nonrecurring is True

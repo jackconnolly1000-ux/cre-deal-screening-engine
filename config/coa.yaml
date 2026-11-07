@@ -3,7 +3,7 @@ buckets:
     section: revenue
     sign: positive
     description: Rent for all units at market or scheduled rent, before any deductions.
-    synonyms: ["Gross Potential Rent", "GPR", "Potential Rent", "Gross Market Rent", "Scheduled Rent", "Market Rent"]
+    synonyms: ["Gross Potential Rent", "GPR", "Potential Rent", "Gross Market Rent", "Scheduled Rent", "Market Rent", "Rent Income", "Rental Income", "Section 8 Rent", "SEC 8 Rent", "HAP Rent"]
   LOSS_TO_LEASE:
     section: revenue
     sign: negative
@@ -38,7 +38,7 @@ buckets:
     section: opex
     sign: positive
     description: Property taxes paid to the taxing authority.
-    synonyms: ["Real Estate Taxes", "R/E Taxes", "Property Taxes", "RE Tax"]
+    synonyms: ["Real Estate Taxes", "R/E Taxes", "Property Taxes", "RE Tax", "Taxes"]
   INSURANCE:
     section: opex
     sign: positive
@@ -53,12 +53,12 @@ buckets:
     section: opex
     sign: positive
     description: Ordinary repairs and maintenance supplies, not capital items.
-    synonyms: ["Repairs & Maintenance", "R&M", "Repairs and Maintenance", "Maintenance Supplies"]
+    synonyms: ["Repairs & Maintenance", "R&M", "Repairs and Maintenance", "Maintenance Supplies", "Cleaning & Maint.", "Cleaning & Maintenance", "Cleaning/Maintenance", "HVAC", "Plumbing", "Repairs", "Supplies", "Maintenance"]
   TURNOVER:
     section: opex
     sign: positive
     description: Make-ready costs between tenants (paint, cleaning, carpet).
-    synonyms: ["Turnover", "Make Ready", "Make-Ready", "Unit Turns", "Turn Costs"]
+    synonyms: ["Turnover", "Make Ready", "Make-Ready", "Unit Turns", "Turn Costs", "Re-Key", "Rekey"]
   CONTRACT_SERVICES:
     section: opex
     sign: positive
@@ -73,12 +73,12 @@ buckets:
     section: opex
     sign: positive
     description: Property management fee, usually a percent of collections.
-    synonyms: ["Management Fee", "Management Fees", "Property Management"]
+    synonyms: ["Management Fee", "Management Fees", "Property Management", "Prop. Management", "Prop Management"]
   GENERAL_ADMIN:
     section: opex
     sign: positive
     description: Office, software, legal, accounting, licenses, bank fees.
-    synonyms: ["General & Administrative", "G&A", "Administrative", "Office Expense", "Legal & Accounting"]
+    synonyms: ["General & Administrative", "G&A", "Administrative", "Office Expense", "Legal & Accounting", "Legal", "Legal Fees", "Legal Expense", "Legal & Professional", "Professional Fees", "Court / Eviction", "Court & Eviction", "Court Costs", "Court Filing Fees", "Eviction Costs", "Eviction Fees", "Eviction Expense", "Filing Fees"]
   MARKETING:
     section: opex
     sign: positive
