@@ -9,6 +9,7 @@ from decimal import ROUND_CEILING, ROUND_HALF_UP, Decimal
 from random import Random
 
 from faker import Faker
+from reportlab.pdfbase.pdfmetrics import stringWidth
 
 from cre_screen.config import load_config
 from cre_screen.schemas.common import OPEX_BUCKETS, REVENUE_BUCKETS, to_cents
@@ -23,8 +24,10 @@ from synth.formats import (
     STATUS_TEXT,
     fmt_month,
 )
-from synth.layouts.rr_classic import COLUMNS, ROWS_PER_PAGE
+from synth.layouts import RR, RR_COLUMNS, rr_grouped
+from synth.layouts._pdf_rr import Column
 from synth.params import Params
+from synth.plan import PLAN, LayoutPlan
 from synth.util import ONE, ZERO, month_end, rand_dec, shift_month
 
 D = Decimal
@@ -46,8 +49,15 @@ VACANT_LIKE = ("vacant", "down")
 OUTLIER_LIMIT = D("0.12")  # base deals stay under half of rr_rent_outlier.deviation_pct (0.25)
 
 
+AUX_SEED_MASK = 0x5EED
+HEADER_FONT = ("Helvetica-Bold", 7)
+HEADER_INSETS = 6 + 3  # left padding plus right padding used by the layouts
+
+
 @dataclass
 class DealBuild:
+    plan: LayoutPlan
+    footnotes: list[str]
     truth: DealTruth
     style: Style
     month_labels: list[str]
@@ -88,9 +98,18 @@ def _sample(rng: Random, params: Params) -> Sample:
     )
 
 
-def _style(rng: Random, fake: Faker) -> Style:
+def _fits(header: str, width: int) -> bool:
+    return stringWidth(header, *HEADER_FONT) + HEADER_INSETS <= width
+
+
+def _style(rng: Random, fake: Faker, columns: tuple[Column, ...], aux_seed: int) -> Style:
+    """Per-deal look. Header synonyms are drawn only from those that fit their column."""
     cfg = load_config().rr_headers
-    headers = {field: rng.choice(cfg.fields[field]) for field, _w, _a in COLUMNS}
+    headers: dict[str, str] = {}
+    for field, width, _align in columns:
+        if field in cfg.fields:
+            options = [h for h in cfg.fields[field] if _fits(h, width)] or cfg.fields[field]
+            headers[field] = rng.choice(options)
     return Style(
         rr_headers=headers,
         t12_label_header=rng.choice(["Description", "Account", "Line Item"]),
@@ -101,6 +120,7 @@ def _style(rng: Random, fake: Faker) -> Style:
         month_style=rng.choice(MONTH_STYLES),
         status_style=rng.choice(sorted(STATUS_TEXT)),
         property_name=f"{fake.last_name()} {rng.choice(PROPERTY_SUFFIX)} Apartments",
+        aux_seed=aux_seed,
     )
 
 
@@ -327,7 +347,9 @@ def _finish_proforma(ctx: BuildCtx, style: Style) -> dict[str, object]:
         "unit_count": ctx.sample.n_units,
         "vacancy_rate": format(ctx.pf["vacancy_rate"], "f"),
         "mgmt_fee_pct": format(ctx.pf["mgmt_fee_pct"], "f"),
-        "source_note": "Synthetic OM p.14, 'Pro Forma Year 1' table",
+        "source_note": " ".join(
+            ["Synthetic OM p.14, 'Pro Forma Year 1' table", str(ctx.pf.get("note_suffix", ""))]
+        ).strip(),
         "lines": ordered,
     }
 
@@ -341,11 +363,19 @@ def build_deal(deal_number: int, seed: int, params: Params, *, split: str = "dev
     fake = Faker()
     fake.seed_instance(deal_seed)
 
+    plan = PLAN[deal_number]
     as_of = month_end(2026, rng.randint(6, 10))
     sample = _sample(rng, params)
-    style = _style(rng, fake)
+    style = _style(rng, fake, RR_COLUMNS[plan.rr_layout], deal_seed ^ AUX_SEED_MASK)
     ctx = BuildCtx(
-        rng=rng, fake=fake, params=params, deal_number=deal_number, as_of=as_of, sample=sample
+        rng=rng,
+        fake=fake,
+        params=params,
+        deal_number=deal_number,
+        as_of=as_of,
+        sample=sample,
+        rr_layout=plan.rr_layout,
+        variant="heldout" if split == "heldout" else "dev",
     )
     active = traps_mod.traps_for(deal_number)
 
@@ -364,8 +394,14 @@ def build_deal(deal_number: int, seed: int, params: Params, *, split: str = "dev
     }
     for t in active:
         t.finalize(ctx)
-    for i, u in enumerate(ctx.units):
-        u.page = i // ROWS_PER_PAGE + 1
+    stated = {k: to_cents(v) for k, v in ctx.rr_totals.items()}
+    if plan.rr_layout == "rr_grouped":
+        ctx.units = rr_grouped.order(ctx.units)
+        pages = rr_grouped.paginate(ctx.units, stated)
+    else:
+        pages = RR[plan.rr_layout].paginate(ctx.units)
+    for u, page in zip(ctx.units, pages, strict=True):
+        u.page = page
 
     _build_proforma(ctx)
     for t in active:
@@ -380,13 +416,13 @@ def build_deal(deal_number: int, seed: int, params: Params, *, split: str = "dev
         deal_id=f"deal_{deal_number:03d}",
         seed=seed,
         split=split,  # type: ignore[arg-type]
-        rr_layout="rr_classic",
-        t12_layout="t12_grid",
-        rr_format="pdf_text",
-        t12_format="pdf_text",
+        rr_layout=plan.rr_layout,
+        t12_layout=plan.t12_layout,
+        rr_format=plan.rr_format,  # type: ignore[arg-type]
+        t12_format=plan.t12_format,  # type: ignore[arg-type]
         as_of_date=as_of,
         units=ctx.units,
-        rr_stated_totals={k: to_cents(v) for k, v in ctx.rr_totals.items()},
+        rr_stated_totals=stated,
         t12_lines=[
             TruthT12Line(
                 label=ln.label,
@@ -409,8 +445,16 @@ def build_deal(deal_number: int, seed: int, params: Params, *, split: str = "dev
         "t12_layout": truth.t12_layout,
         "rr_format": truth.rr_format,
         "t12_format": truth.t12_format,
-        "scanned": False,
+        "scanned": plan.scanned,
         "traps": truth.traps,
         "property_name": style.property_name,
     }
-    return DealBuild(truth=truth, style=style, month_labels=labels, proforma=proforma, meta=meta)
+    return DealBuild(
+        plan=plan,
+        footnotes=ctx.footnotes,
+        truth=truth,
+        style=style,
+        month_labels=labels,
+        proforma=proforma,
+        meta=meta,
+    )

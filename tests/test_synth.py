@@ -18,8 +18,10 @@ from cre_screen.schemas.common import CheckId
 from cre_screen.schemas.deal import DealTruth
 from cre_screen.schemas.proforma import BrokerProForma
 from synth.generate import main
+from synth.layouts import RR_COLUMNS, rr_grouped
 from synth.layouts.rr_classic import ROWS_PER_PAGE
 from synth.params import load_params
+from synth.plan import DEV_DEALS, HELDOUT_DEALS, PLAN
 from synth.traps import DEAL_PLAN, DEV_TRAP_IDS, REGISTRY
 from synth.truth import DealBuild, build_deal
 
@@ -42,7 +44,7 @@ SPEC_DEV_TRAPS = {
     "TRAP_PF_VACANCY",
     "TRAP_PF_MGMT_FEE",
 }
-ALL_DEALS = sorted(DEAL_PLAN)
+ALL_DEALS = list(DEV_DEALS)  # the held-out deals are never built here
 
 
 @pytest.fixture(scope="module")
@@ -144,12 +146,13 @@ def test_every_t12_label_is_printed(gen_dirs: tuple[Path, Path]) -> None:
             assert line.label in text
 
 
-def test_heldout_generation_is_refused_and_writes_nothing(tmp_path: Path) -> None:
-    code = main(
-        ["--split", "heldout", "--deals", "15-20", "--seed", "1015", "--out", str(tmp_path)]
-    )
-    assert code == 2
-    assert list(tmp_path.iterdir()) == []
+def test_heldout_generation_writes_six_deals_and_their_manifest(tmp_path: Path) -> None:
+    code = main(["--split", "heldout", "--deals", "15-20", "--seed", "77", "--out", str(tmp_path)])
+    assert code == 0
+    assert sorted(p.name for p in tmp_path.iterdir()) == [
+        "HELDOUT_MANIFEST.sha256",
+        *[f"deal_{n:03d}" for n in range(15, 21)],
+    ]
 
 
 def test_existing_deal_folder_needs_overwrite_flag(tmp_path: Path) -> None:
@@ -184,8 +187,8 @@ def test_deal_plan_matches_spec_counts() -> None:
 
 def test_every_trap_appears_at_least_twice_across_dev() -> None:
     counts = {tid: 0 for tid in DEV_TRAP_IDS}
-    for traps in DEAL_PLAN.values():
-        for tid in traps:
+    for n in DEV_DEALS:
+        for tid in DEAL_PLAN[n]:
             counts[tid] += 1
     assert min(counts.values()) >= 2, counts
 
@@ -238,9 +241,17 @@ def test_units_have_pages_and_ids_are_unique_unless_dup_trap(
     n: int, builds: dict[int, DealBuild]
 ) -> None:
     truth = builds[n].truth
-    assert [u.page for u in truth.units] == [
-        i // ROWS_PER_PAGE + 1 for i in range(len(truth.units))
-    ]
+    layout = truth.rr_layout
+    if layout == "rr_excel":
+        assert all(u.page is None for u in truth.units), "a workbook has no printed pages"
+    elif layout == "rr_grouped":
+        assert [u.page for u in truth.units] == rr_grouped.paginate(
+            truth.units, truth.rr_stated_totals
+        )
+    else:
+        assert [u.page for u in truth.units] == [
+            i // ROWS_PER_PAGE + 1 for i in range(len(truth.units))
+        ]
     ids = [u.unit_id for u in truth.units]
     if "TRAP_RR_DUP_UNIT" in truth.traps:
         dupes = {i for i in ids if ids.count(i) > 1}
@@ -511,16 +522,83 @@ def test_pf_mgmt_fee_trap(n: int, builds: dict[int, DealBuild]) -> None:
     assert D("0.04") - D("0.001") <= uw_total(b, "MANAGEMENT_FEE") / egi <= D("0.05") + D("0.001")
 
 
-def test_every_possible_rent_roll_header_fits_its_column() -> None:
+@pytest.mark.parametrize("layout", sorted(RR_COLUMNS))
+def test_every_possible_rent_roll_header_fits_its_column(layout: str) -> None:
     """A header wider than its column runs into its neighbour and merges into one phrase."""
     from reportlab.pdfbase.pdfmetrics import stringWidth
 
     from cre_screen.config import load_config
-    from synth.layouts.rr_classic import COLUMNS
 
     synonyms = load_config().rr_headers.fields
-    insets = 6 + 3  # left padding plus right padding used by the layout
-    assert sum(width for _f, width, _a in COLUMNS) == 720
-    for field, width, _align in COLUMNS:
-        for header in synonyms[field]:
-            assert stringWidth(header, "Helvetica-Bold", 7) + insets <= width, (field, header)
+    insets = 6 + 3  # left padding plus right padding used by the layouts
+    columns = RR_COLUMNS[layout]
+    for field, width, _align in columns:
+        for header in synonyms.get(field, []):
+            fits = stringWidth(header, "Helvetica-Bold", 7) + insets <= width
+            if layout == "rr_classic":
+                assert fits, (field, header)  # classic must fit every synonym
+    assert sum(width for _f, width, _a in columns) in (720, 936)
+
+
+@pytest.mark.parametrize("layout", ["rr_grouped", "rr_wide"])
+def test_every_header_the_generator_can_pick_for_a_new_layout_fits(layout: str, params) -> None:
+    """The style only draws synonyms that fit, so a picked header never overflows its column."""
+    from reportlab.pdfbase.pdfmetrics import stringWidth
+
+    widths = {f: w for f, w, _a in RR_COLUMNS[layout]}
+    deal = next(n for n in DEV_DEALS if PLAN[n].rr_layout == layout)
+    for seed in range(7, 40):
+        headers = build_deal(deal, seed, params).style.rr_headers
+        for field, text in headers.items():
+            assert stringWidth(text, "Helvetica-Bold", 7) + 9 <= widths[field], (seed, field, text)
+
+
+# ---------- layout plan and formats (SPEC 11.2) ----------
+
+
+def test_format_counts_match_the_spec() -> None:
+    def counts(deals) -> tuple[int, int, int]:
+        rr_xlsx = sum(PLAN[n].rr_format == "xlsx" for n in deals)
+        scanned = sum(PLAN[n].rr_format == "pdf_scanned" for n in deals)
+        t12_xlsx = sum(PLAN[n].t12_format == "xlsx" for n in deals)
+        return rr_xlsx, scanned, t12_xlsx
+
+    assert counts(DEV_DEALS) == (4, 2, 4)
+    assert counts(HELDOUT_DEALS) == (2, 2, 2)
+
+
+def test_every_layout_family_is_used_in_dev() -> None:
+    assert {PLAN[n].rr_layout for n in DEV_DEALS} == {
+        "rr_classic",
+        "rr_grouped",
+        "rr_wide",
+        "rr_excel",
+    }
+    assert {PLAN[n].t12_layout for n in DEV_DEALS} == {"t12_grid", "t12_sections", "t12_excel"}
+
+
+def test_every_deal_with_a_duplicate_row_trap_uses_the_classic_layout() -> None:
+    for n, traps in DEAL_PLAN.items():
+        if "TRAP_RR_DUP_UNIT" in traps:
+            assert PLAN[n].rr_layout == "rr_classic", n
+
+
+def test_deals_one_to_five_keep_the_original_classic_pdf_layouts() -> None:
+    assert all(
+        PLAN[n].rr_layout == "rr_classic" and PLAN[n].t12_layout == "t12_grid" for n in range(1, 6)
+    )
+    assert not any(PLAN[n].scanned for n in range(1, 6))
+
+
+def test_committed_dev_truth_equals_a_fresh_generation(params, tmp_path: Path) -> None:
+    """Committed files equal today's output for the seed (truth, not PDF bytes)."""
+    out = tmp_path / "fresh"
+    assert main(["--split", "dev", "--deals", "1-14", "--seed", "7", "--out", str(out)]) == 0
+    for n in DEV_DEALS:
+        name = f"deal_{n:03d}"
+        for fname in ("truth.json", "meta.json", "proforma.yaml"):
+            fresh = (out / name / fname).read_bytes()
+            assert fresh == (DATA / name / fname).read_bytes(), (name, fname)
+
+
+DATA = Path(__file__).resolve().parents[1] / "data" / "synthetic"

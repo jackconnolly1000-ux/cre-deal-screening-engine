@@ -54,6 +54,7 @@ class Style:
     month_style: str
     status_style: str
     property_name: str
+    aux_seed: int = 0  # seeds the printed-only extras (tenant names, deposits) per deal
 
 
 @dataclass
@@ -71,6 +72,9 @@ class BuildCtx:
     used_lines: set[str] = field(default_factory=set)
     rr_totals: dict[str, Decimal] = field(default_factory=dict)
     pf: dict[str, object] = field(default_factory=dict)
+    rr_layout: str = "rr_classic"
+    variant: str = "dev"  # "heldout" switches on the harder trap variants
+    footnotes: list[str] = field(default_factory=list)  # printed under the rent roll table
 
     def pick_units(self, k: int, pred: Callable[[TruthUnit], bool]) -> list[TruthUnit]:
         pool = [u for u in self.units if u.unit_id not in self.used_units and pred(u)]

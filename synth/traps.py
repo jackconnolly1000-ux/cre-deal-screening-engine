@@ -1,12 +1,15 @@
-"""The 13 dev traps (SPEC 11.2). Each trap mutates the document view and records what the
-reconciliation gate should find.
+"""The 13 traps (SPEC 11.2) and their held-out variants.
+
+Each trap mutates the document view and records what the reconciliation gate should find.
 
 Phases, in order: ``tweak_sample`` (before units exist), ``pre`` (units built, T-12 not yet),
 ``post`` (T-12 built), ``finalize`` (stated rent roll totals computed), ``proforma``.
 Within a phase traps run in REGISTRY order, so the duplicate-row trap copies a unit after any
 other trap has changed it.
 
-Held-out variants (``variant="heldout"``) belong to M6 and are not implemented here.
+Held-out variants (``ctx.variant == "heldout"``, used only for deals 15 to 20) are harder
+versions of five traps. Every branch is gated on the variant, so the dev draw sequence, and with
+it the dev data, is identical to what it was before the variants existed.
 """
 
 from __future__ import annotations
@@ -25,6 +28,7 @@ from synth.util import ONE, ZERO, rand_dec
 D = Decimal
 
 OCCUPIED_LIKE = ("occupied", "notice")
+HELDOUT_MIN_UNITS = 60
 
 
 class Trap:
@@ -59,6 +63,20 @@ class Trap:
         )
 
 
+def footnote_lines(note: str, unit_ids: list[str], width: int = 95) -> list[str]:
+    """A footnote naming units, wrapped so it stays inside the printed page."""
+    lines: list[str] = []
+    current = f"Concession: {note} - units "
+    for index, unit_id in enumerate(unit_ids):
+        piece = unit_id + (", " if index < len(unit_ids) - 1 else "")
+        if len(current) + len(piece) > width:
+            lines.append(current.rstrip())
+            current = "  "
+        current += piece
+    lines.append(current.rstrip())
+    return lines
+
+
 def _line_for(ctx: BuildCtx, bucket: str) -> WorkLine:
     return next(ln for ln in ctx.lines if ln.bucket == bucket)
 
@@ -89,7 +107,20 @@ class RRFooting(Trap):
     trap_id = "TRAP_RR_FOOTING"
     check_id = "RR_FOOTING"
 
+    def tweak_sample(self, ctx: BuildCtx) -> None:
+        if ctx.variant == "heldout":
+            # One omitted row must stay small against the rent roll vs T-3 gap threshold.
+            top = max(HELDOUT_MIN_UNITS, ctx.params.unit_count.max)
+            ctx.sample.n_units = ctx.rng.randint(HELDOUT_MIN_UNITS, top)
+
     def finalize(self, ctx: BuildCtx) -> None:
+        if ctx.variant == "heldout":
+            # A unit row is left out of the printed table but stays in the stated total.
+            pool = [u for u in ctx.units if u.status in OCCUPIED_LIKE and u.in_place_rent]
+            omitted = min(pool, key=lambda u: u.in_place_rent or ZERO)
+            ctx.units.remove(omitted)
+            self.expect(ctx)
+            return
         total = ctx.rr_totals["in_place_rent"]
         whole = f"{int(total)}"
         cents = total - Decimal(int(total))
@@ -142,8 +173,13 @@ class RRHiddenConcession(Trap):
         share = rand_dec(ctx.rng, D("0.15"), D("0.30"), 2)
         k = max(1, int((share * len(ctx.units)).to_integral_value(ROUND_HALF_UP)))
         chosen = ctx.pick_units(k, lambda u: u.status == "occupied")
-        for u in chosen:
-            u.concession_note = ctx.rng.choice(self.NOTES)
+        if ctx.variant == "heldout":
+            # Nothing in the row: the concession appears only in a footnote listing unit numbers.
+            note = ctx.rng.choice(self.NOTES)
+            ctx.footnotes.extend(footnote_lines(note, [u.unit_id for u in chosen]))
+        else:
+            for u in chosen:
+                u.concession_note = ctx.rng.choice(self.NOTES)
         self.expect(ctx, unit_ids=[u.unit_id for u in chosen])
 
 
@@ -191,6 +227,8 @@ class T12OneTimeIncome(Trap):
 
     def post(self, ctx: BuildCtx) -> None:
         label = ctx.rng.choice(["Insurance Proceeds", "Lease Buyout Fee"])
+        if ctx.variant == "heldout":
+            label = "Other Income - Misc Adj"  # ambiguous: nothing in the label says one-time
         monthly = [to_cents(ZERO)] * 12
         monthly[ctx.rng.randrange(12)] = rand_dec(ctx.rng, D("5000"), D("25000"), 2)
         last_revenue = max(i for i, ln in enumerate(ctx.lines) if ln.bucket in REVENUE_BUCKETS)
@@ -226,10 +264,26 @@ class RRDupUnit(Trap):
         ctx.sample.n_units = ctx.rng.randint(self.MIN_UNITS, top)
 
     def post(self, ctx: BuildCtx) -> None:
+        if ctx.rr_layout != "rr_classic":
+            raise ValueError("the duplicate-row traps rely on classic fixed-size pages")
+        if ctx.variant == "heldout":
+            self._same_page(ctx)
+            return
         boundary = ctx.rng.choice(range(ROWS_PER_PAGE, len(ctx.units), ROWS_PER_PAGE))
         # Duplicate the cheapest unit printed so far (a vacant one if any).
         source = min(ctx.units[:boundary], key=lambda u: u.in_place_rent or ZERO)
         ctx.units.insert(boundary, source.model_copy(deep=True))
+        self.expect(ctx, unit_ids=[source.unit_id])
+
+    def _same_page(self, ctx: BuildCtx) -> None:
+        """Held-out variant: the copy sits on the same page as the original, not next to it."""
+        starts = list(range(0, len(ctx.units) - ROWS_PER_PAGE + 1, ROWS_PER_PAGE))
+        start = ctx.rng.choice(starts)
+        window = ctx.units[start : start + ROWS_PER_PAGE - 4]
+        first = start + min(range(len(window)), key=lambda k: window[k].in_place_rent or ZERO)
+        second = ctx.rng.randint(first + 2, start + ROWS_PER_PAGE - 2)
+        source = ctx.units[first]
+        ctx.units.insert(second, source.model_copy(deep=True))
         self.expect(ctx, unit_ids=[source.unit_id])
 
 
@@ -242,6 +296,8 @@ class PFTaxDrop(Trap):
         _pf_lines(ctx)["REAL_ESTATE_TAXES"] = to_cents(
             _t12_total(ctx, "REAL_ESTATE_TAXES") * (ONE - cut)
         )
+        if ctx.variant == "heldout":
+            ctx.pf["note_suffix"] = "Tax appeal pending."
         self.expect(ctx)
 
 
@@ -307,6 +363,7 @@ REGISTRY: dict[str, Trap] = {
 DEV_TRAP_IDS: tuple[str, ...] = tuple(REGISTRY)
 
 # Deals 001-002 are clean controls; 003-014 carry 2-4 traps and every trap appears at least twice.
+# The plan is static data, so tests can check it without touching any held-out file.
 DEAL_PLAN: dict[int, tuple[str, ...]] = {
     1: (),
     2: (),
@@ -332,6 +389,15 @@ DEAL_PLAN: dict[int, tuple[str, ...]] = {
         "TRAP_T12_FOOTING",
     ),
     14: ("TRAP_RR_HIDDEN_CONCESSION", "TRAP_RR_DUP_UNIT", "TRAP_T12_ONE_TIME_INCOME"),
+    # Held-out (deals 015 to 019 carry 2-4 traps, 020 is a clean control). Every held-out variant
+    # appears at least once: footing and tax drop in 015, duplicate and one-time income in 016,
+    # concession footnote in 017.
+    15: ("TRAP_RR_FOOTING", "TRAP_PF_TAX_DROP", "TRAP_T12_SPIKE"),
+    16: ("TRAP_RR_DUP_UNIT", "TRAP_T12_ONE_TIME_INCOME", "TRAP_RR_ZERO_RENT"),
+    17: ("TRAP_RR_HIDDEN_CONCESSION", "TRAP_RR_EXPIRED_LEASE", "TRAP_PF_VACANCY"),
+    18: ("TRAP_X_RENT_PUSH", "TRAP_T12_FOOTING", "TRAP_PF_MGMT_FEE"),
+    19: ("TRAP_PF_INS_DROP", "TRAP_RR_ZERO_RENT", "TRAP_T12_SPIKE"),
+    20: (),
 }
 
 

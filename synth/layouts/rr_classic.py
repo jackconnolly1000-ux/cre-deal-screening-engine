@@ -36,6 +36,11 @@ COLUMNS: tuple[tuple[str, int, str], ...] = (
 )
 
 
+def paginate(units: list[TruthUnit]) -> list[int]:
+    """Printed page of each unit: a fixed number of rows per page."""
+    return [i // ROWS_PER_PAGE + 1 for i in range(len(units))]
+
+
 def page_count(n_rows: int) -> int:
     return max(1, math.ceil(n_rows / ROWS_PER_PAGE))
 
@@ -71,6 +76,7 @@ def render(
     stated_totals: dict[str, Decimal],
     as_of: date,
     style: Style,
+    footnotes: list[str] | None = None,
 ) -> None:
     rl_config.invariant = 1
     page_w, page_h = landscape(letter)
@@ -123,6 +129,8 @@ def render(
             c.setFont("Helvetica", 6.5)
             c.drawString(LEFT, y - 24, "Rents are scheduled monthly amounts in US dollars.")
             c.drawString(LEFT, y - 34, "Vacant units show no lease dates or in-place rent.")
+            for k, text in enumerate(footnotes or [], start=1):
+                c.drawString(LEFT, y - 34 - 10 * k, text)
         c.setFont("Helvetica", 7)
         c.drawCentredString(page_w / 2, 24, f"Page {page + 1} of {n_pages}")
         c.showPage()
