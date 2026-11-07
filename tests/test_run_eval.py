@@ -2,41 +2,44 @@ from __future__ import annotations
 
 import json
 from decimal import Decimal
+from functools import lru_cache
 from pathlib import Path
-from typing import Any
 
 import pytest
 
 from cre_screen.config import load_config
 from cre_screen.mapping.cost import CostTracker
 from cre_screen.schemas.deal import DealScore
-from cre_screen.schemas.mapping import COAMapping, COAMappingBatch
 from evals import run_eval
 from evals.report import aggregate, dominant_provenance, rate, render_markdown, write_reports
+from tests.fake_vision import PerfectOcr, clean_transcriptions
+from tests.fakes import CannedCoaLLM
 
 D = Decimal
 CFG = load_config()
 
 
-class OneTimeIncomeLLM:
-    """Answers the only label the synonym table cannot place. Nothing is called or spent."""
+DATA = Path(__file__).resolve().parents[1] / "data" / "synthetic"
 
-    def structured(self, *, task: str, response_model: Any, system: str, user_content, model=None):
-        assert task == "coa_map", f"unexpected LLM task {task}"
-        labels = json.loads(user_content[0]["text"].split("Labels:\n")[-1])
-        return COAMappingBatch(
-            mappings=[
-                COAMapping(
-                    line_label=x, bucket="OTHER_INCOME", is_nonrecurring=True, rationale="canned"
-                )
-                for x in labels
-            ]
-        )
+
+@lru_cache(maxsize=1)
+def _transcriptions() -> dict:
+    """Flawless transcriptions of the committed scanned dev deals (built once, offline)."""
+    return {
+        key: page
+        for n in (10, 11)
+        for key, page in clean_transcriptions(n, DATA / f"deal_{n:03d}" / "rent_roll.pdf").items()
+    }
+
+
+def offline_llm() -> PerfectOcr:
+    """Perfect OCR for the scans and a canned answer for the one-time income label."""
+    return PerfectOcr(_transcriptions(), fallback=CannedCoaLLM())
 
 
 def _patch_llm(monkeypatch: pytest.MonkeyPatch, ledger: Path) -> CostTracker:
     tracker = CostTracker(CFG.models, ledger, run_id="t")
-    monkeypatch.setattr(run_eval, "make_llm", lambda cfg: (OneTimeIncomeLLM(), tracker, None))
+    monkeypatch.setattr(run_eval, "make_llm", lambda cfg: (offline_llm(), tracker, None))
     return tracker
 
 
@@ -162,8 +165,10 @@ def test_baseline_records_the_numbers_the_regression_test_compares() -> None:
 # ---------- the CLI ----------
 
 
-@pytest.mark.parametrize("split", ["heldout", "real", "all"])
-def test_only_the_dev_split_runs_for_now(split: str, capsys: pytest.CaptureFixture[str]) -> None:
+@pytest.mark.parametrize("split", ["heldout", "all"])
+def test_held_out_and_combined_splits_are_not_available_yet(
+    split: str, capsys: pytest.CaptureFixture[str]
+) -> None:
     assert run_eval.main(["--split", split]) == 2
     assert "not available yet" in capsys.readouterr().err
 
@@ -200,3 +205,39 @@ def test_a_replay_miss_exits_4_and_asks_for_a_recording(
     monkeypatch.setattr(run_eval, "evaluate", boom)
     assert run_eval.main(["--split", "dev", "--cache-mode", "replay"]) == 4
     assert "CRE_LLM_CACHE_MODE=record" in capsys.readouterr().err
+
+
+def test_a_scan_with_no_readable_as_of_date_is_rerun_with_the_truths_date_and_noted(
+    stub_llm, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The vision prompt returns the table only, so a scan's "As of" title line is lost. The
+    real CLI asks the operator for --as-of; the harness plays the operator and says so."""
+    untitled = {
+        key: page.model_copy(update={"rows": [r for r in page.rows if r.row_kind != "other"]})
+        for key, page in _transcriptions().items()
+    }
+    llm = PerfectOcr(untitled, fallback=CannedCoaLLM())
+    monkeypatch.setattr(run_eval, "make_llm", lambda cfg: (llm, stub_llm, None))
+    notes: list[str] = []
+    scores, _ = run_eval.evaluate(CFG, out_dir=tmp_path / "out", notes=notes)
+    assert notes == [
+        "deal_010: no as-of date read; supplied 2026-10-31",
+        "deal_011: no as-of date read; supplied 2026-07-31",
+    ]
+    overall = aggregate(scores)["overall"]
+    assert overall["caught"] == 36 and overall["numeric_accuracy"] == "1.0000"
+
+
+def test_the_dev_report_states_which_as_of_dates_the_harness_supplied(
+    stub_llm, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    untitled = {
+        key: page.model_copy(update={"rows": [r for r in page.rows if r.row_kind != "other"]})
+        for key, page in _transcriptions().items()
+    }
+    llm = PerfectOcr(untitled, fallback=CannedCoaLLM())
+    monkeypatch.setattr(run_eval, "make_llm", lambda cfg: (llm, stub_llm, None))
+    monkeypatch.setattr(run_eval, "BASELINE_PATH", tmp_path / "b.json")
+    assert run_eval.main(["--split", "dev", "--out", str(tmp_path / "reports")]) == 0
+    report = next((tmp_path / "reports").glob("*_dev.md")).read_text(encoding="utf-8")
+    assert "as_of_supplied_by_harness: deal_010" in report and "deal_011" in report

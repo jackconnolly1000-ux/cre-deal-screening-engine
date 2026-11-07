@@ -1,0 +1,221 @@
+{
+  "cost_usd": "0.0013471",
+  "created_at": "2026-11-07T01:32:02+00:00",
+  "key": "2aad41c2f62484a5bcf471f73f50f0fb55b5f86ed5ca3295be86907c58b5cc28",
+  "model": "claude-haiku-5-5",
+  "response": {
+    "headers": [
+      "Apt #",
+      "Floor Plan",
+      "Beds",
+      "Baths",
+      "Sq Ft",
+      "Occ Status",
+      "Charged Rent",
+      "Scheduled Rent",
+      "Move-In",
+      "Lease Expiration",
+      "Specials"
+    ],
+    "rows": [
+      {
+        "cells": {
+          "Apt #": "804",
+          "Baths": "2",
+          "Beds": "2",
+          "Charged Rent": "1,769.00",
+          "Floor Plan": "2x2",
+          "Lease Expiration": "15-Oct-2027",
+          "Move-In": "16-Oct-2026",
+          "Occ Status": "Occupied",
+          "Scheduled Rent": "1,882.00",
+          "Specials": "",
+          "Sq Ft": "1028"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Apt #": "805",
+          "Baths": "2",
+          "Beds": "2",
+          "Charged Rent": "1,842.00",
+          "Floor Plan": "2x2",
+          "Lease Expiration": "17-Jun-2027",
+          "Move-In": "18-Jun-2026",
+          "Occ Status": "Occupied",
+          "Scheduled Rent": "1,939.00",
+          "Specials": "",
+          "Sq Ft": "1097"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Apt #": "806",
+          "Baths": "1",
+          "Beds": "1",
+          "Charged Rent": "1,360.00",
+          "Floor Plan": "1x1",
+          "Lease Expiration": "03-Mar-2027",
+          "Move-In": "04-Mar-2026",
+          "Occ Status": "Notice",
+          "Scheduled Rent": "1,360.00",
+          "Specials": "",
+          "Sq Ft": "686"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Apt #": "807",
+          "Baths": "1",
+          "Beds": "0",
+          "Charged Rent": "845.00",
+          "Floor Plan": "Studio",
+          "Lease Expiration": "25-Aug-2027",
+          "Move-In": "26-Aug-2026",
+          "Occ Status": "Occupied",
+          "Scheduled Rent": "929.00",
+          "Specials": "",
+          "Sq Ft": "546"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Apt #": "808",
+          "Baths": "2",
+          "Beds": "2",
+          "Charged Rent": "1,879.00",
+          "Floor Plan": "2x2",
+          "Lease Expiration": "21-Jul-2027",
+          "Move-In": "22-Jul-2026",
+          "Occ Status": "Occupied",
+          "Scheduled Rent": "1,999.00",
+          "Specials": "",
+          "Sq Ft": "1010"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Apt #": "901",
+          "Baths": "1",
+          "Beds": "1",
+          "Charged Rent": "1,218.00",
+          "Floor Plan": "1x1",
+          "Lease Expiration": "11-Aug-2027",
+          "Move-In": "12-Aug-2026",
+          "Occ Status": "Occupied",
+          "Scheduled Rent": "1,310.00",
+          "Specials": "",
+          "Sq Ft": "789"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Apt #": "902",
+          "Baths": "1",
+          "Beds": "1",
+          "Charged Rent": "1,283.00",
+          "Floor Plan": "1x1",
+          "Lease Expiration": "21-Jun-2027",
+          "Move-In": "22-Jun-2026",
+          "Occ Status": "Occupied",
+          "Scheduled Rent": "1,336.00",
+          "Specials": "",
+          "Sq Ft": "746"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Apt #": "903",
+          "Baths": "1",
+          "Beds": "1",
+          "Charged Rent": "1,200.00",
+          "Floor Plan": "1x1",
+          "Lease Expiration": "16-Aug-2027",
+          "Move-In": "17-Aug-2026",
+          "Occ Status": "Occupied",
+          "Scheduled Rent": "1,319.00",
+          "Specials": "",
+          "Sq Ft": "728"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Apt #": "904",
+          "Baths": "1",
+          "Beds": "2",
+          "Charged Rent": "1,665.00",
+          "Floor Plan": "2x1",
+          "Lease Expiration": "12-Oct-2027",
+          "Move-In": "13-Oct-2026",
+          "Occ Status": "Occupied",
+          "Scheduled Rent": "1,665.00",
+          "Specials": "",
+          "Sq Ft": "876"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Apt #": "905",
+          "Baths": "1",
+          "Beds": "1",
+          "Charged Rent": "",
+          "Floor Plan": "1x1",
+          "Lease Expiration": "",
+          "Move-In": "",
+          "Occ Status": "Vacant",
+          "Scheduled Rent": "1,327.00",
+          "Specials": "",
+          "Sq Ft": "659"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Apt #": "Total",
+          "Baths": "",
+          "Beds": "",
+          "Charged Rent": "91,511.00",
+          "Floor Plan": "",
+          "Lease Expiration": "",
+          "Move-In": "",
+          "Occ Status": "",
+          "Scheduled Rent": "105,035.00",
+          "Specials": "",
+          "Sq Ft": ""
+        },
+        "row_kind": "subtotal"
+      },
+      {
+        "cells": {
+          "Apt #": "Rents are scheduled monthly amounts in US dollars. Vacant units show no lease dates or in-place rent.",
+          "Baths": "",
+          "Beds": "",
+          "Charged Rent": "",
+          "Floor Plan": "",
+          "Lease Expiration": "",
+          "Move-In": "",
+          "Occ Status": "",
+          "Scheduled Rent": "",
+          "Specials": "",
+          "Sq Ft": ""
+        },
+        "row_kind": "footnote"
+      }
+    ]
+  },
+  "task": "vision_page",
+  "usage": {
+    "attempts": 1,
+    "input_tokens": 3681,
+    "output_tokens": 1958
+  }
+}
