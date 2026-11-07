@@ -24,7 +24,7 @@ from cre_screen.mapping.cost import CostTracker
 from cre_screen.pipeline import run_deal
 from cre_screen.review import BUCKETS, apply_review
 from cre_screen.schemas.deal import DealPackage
-from cre_screen.schemas.findings import Override
+from cre_screen.schemas.findings import Finding, Override
 
 DATA_DIR = runtime.REPO_ROOT / "data" / "synthetic"
 REAL_DIR = runtime.REPO_ROOT / "data" / "real"
@@ -160,18 +160,24 @@ def findings_tab(pkg: DealPackage, cfg: AppConfig) -> None:
             format_func=lambda i: logic.finding_label(open_findings[i]),
             key="review_finding",
         )
-        action = st.radio("Action", ["override", "clear"], horizontal=True, key="review_action")
+        chosen = open_findings[index]
+        facts = logic.footing_facts(chosen)
         minimum = cfg.thresholds.review.override_note_min_chars
-        note = st.text_input(f"Reviewer note (at least {minimum} characters)", key="review_note")
-        if st.button("Apply", key="review_apply"):
-            problem = logic.validate_note(note, cfg.thresholds)
-            if problem:
-                st.error(problem)
-            else:
-                chosen = open_findings[index]
-                _add_overrides([logic.finding_override(chosen, action, note)])  # type: ignore[arg-type]
-                st.session_state["flash"] = f"{action.capitalize()}d {chosen.check_id}."
-                st.rerun()
+        if facts is not None:
+            _footing_panel(pkg, chosen, facts, cfg)
+        else:
+            action = st.radio("Action", ["override", "clear"], horizontal=True, key="review_action")
+            note = st.text_input(
+                f"Reviewer note (at least {minimum} characters)", key="review_note"
+            )
+            if st.button("Apply", key="review_apply"):
+                problem = logic.validate_note(note, cfg.thresholds)
+                if problem:
+                    st.error(problem)
+                else:
+                    _add_overrides([logic.finding_override(chosen, action, note)])  # type: ignore[arg-type]
+                    st.session_state["flash"] = f"{action.capitalize()}d {chosen.check_id}."
+                    st.rerun()
     if st.session_state["overrides"] and st.button("Undo last override", key="review_undo"):
         st.session_state["overrides"] = st.session_state["overrides"][:-1]
         st.rerun()
@@ -185,6 +191,54 @@ def findings_tab(pkg: DealPackage, cfg: AppConfig) -> None:
             hide_index=True,
             width="stretch",
         )
+
+
+def _footing_panel(pkg: DealPackage, finding: Finding, facts: logic.FootingFacts, cfg: AppConfig):
+    """A footing failure cannot be waved through: the reviewer picks the number that governs."""
+    st.markdown(f"**{facts.column.replace('_', ' ')} does not foot.** Which number governs?")
+    cols = st.columns(3)
+    cols[0].metric("Stated total (printed)", f"${facts.stated:,.2f}")
+    cols[1].metric("Calculated sum (unit rows)", f"${facts.calculated:,.2f}")
+    cols[2].metric("Difference", f"${facts.difference:,.2f}")
+    strategy = st.radio(
+        "Resolution",
+        facts.strategies(),
+        format_func=logic.STRATEGY_LABELS.__getitem__,
+        key="footing_strategy",
+    )
+    unit_id, amount = None, ""
+    if strategy != "use_calculated_sum":
+        ids = [u.unit_id for u in pkg.rent_roll.units]
+        unit_id = st.selectbox(
+            "Unit to correct",
+            ids,
+            index=ids.index(finding.unit_ids[0]) if finding.unit_ids else 0,
+            format_func=lambda u: f"{u} (now ${logic.unit_value(pkg, u, facts.column):,.2f})",
+            key="footing_unit",
+        )
+        amount = st.text_input(f"Corrected {facts.column.replace('_', ' ')}", key="footing_amount")
+        if amount.strip() and strategy == "use_stated_total":
+            try:
+                left = logic.remaining_after_edit(facts, pkg, unit_id, logic.parse_amount(amount))
+                st.caption(f"Rows would then miss the stated total by ${left:,.2f}.")
+            except ValueError:
+                pass
+    minimum = cfg.thresholds.review.override_note_min_chars
+    note = st.text_input(f"Reviewer note (at least {minimum} characters)", key="review_note")
+    if st.button("Apply", key="review_apply"):
+        problem = logic.validate_note(note, cfg.thresholds)
+        try:
+            if problem:
+                raise ValueError(problem)
+            override = logic.footing_overrides(
+                pkg, finding, strategy, note, unit_id=unit_id, amount=amount
+            )
+        except ValueError as exc:
+            st.error(str(exc))
+            return
+        _add_overrides([override])
+        st.session_state["flash"] = "Footing resolved: the correction is in the export."
+        st.rerun()
 
 
 def audit_tab(pkg: DealPackage, deal_dir: Path) -> None:

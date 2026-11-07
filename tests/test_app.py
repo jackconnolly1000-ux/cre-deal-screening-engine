@@ -141,6 +141,7 @@ def test_an_empty_note_is_rejected_too() -> None:
 def test_a_reviewer_can_clear_a_warning_instead_of_overriding_a_block() -> None:
     at = screened("deal_003")
     at.selectbox(key="review_finding").select_index(1)  # the RR_ZERO_RENT_OCC warning
+    at.run()
     at.radio(key="review_action").set_value("clear")
     at.text_input(key="review_note").input("unit 204 is a courtesy unit")
     at.button(key="review_apply").click()
@@ -278,3 +279,78 @@ def test_running_the_same_deal_twice_uses_the_cached_package(
     at.button(key="run").click()
     at.run()
     assert len(calls) == first and not at.exception
+
+
+# ---------- a footing failure must be resolved, not waved through ----------
+
+
+def pick_strategy(at: AppTest, strategy: str) -> AppTest:
+    at.radio(key="footing_strategy").set_value(strategy)
+    at.run()
+    assert not at.exception, at.exception
+    return at
+
+
+def test_a_footing_failure_asks_which_number_governs_instead_of_offering_a_bare_override() -> None:
+    at = screened("deal_003")
+    shown = metrics(at)
+    assert shown["Stated total (printed)"] == "$73,703.00"
+    assert shown["Calculated sum (unit rows)"] == "$37,703.00"
+    assert shown["Difference"] == "$-36,000.00"
+    from cre_screen.app import logic
+
+    assert at.radio(key="footing_strategy").options == list(logic.STRATEGY_LABELS.values())
+    assert not [r for r in at.radio if r.key == "review_action"], "no bare override for footing"
+
+
+def test_use_calculated_sum_resolves_the_block_and_records_the_corrected_value() -> None:
+    at = screened("deal_003")
+    at.text_input(key="review_note").input("digits swapped in the printed total")
+    at.button(key="review_apply").click()
+    at.run()
+    assert not at.exception, at.exception
+    (o,) = at.session_state["overrides"]
+    assert (o["action"], o["resolution_strategy"], o["corrected_value"]) == (
+        "resolve_footing",
+        "use_calculated_sum",
+        "37703.00",
+    )
+    assert metrics(at)["Gate state"] == "READY" and export_button(at).proto.disabled is False
+
+
+def test_use_stated_total_is_refused_until_the_rows_actually_foot() -> None:
+    at = pick_strategy(screened("deal_003"), "use_stated_total")
+    at.selectbox(key="footing_unit").select("104")
+    at.text_input(key="footing_amount").input("1500.00")
+    at.text_input(key="review_note").input("keying the missing rent")
+    at.button(key="review_apply").click()
+    at.run()
+    assert any("still miss the stated total" in e.value for e in at.error)
+    assert at.session_state["overrides"] == []
+    assert metrics(at)["Gate state"] == "REVIEW"
+
+
+def test_use_stated_total_with_the_exact_amount_clears_the_block_through_the_data() -> None:
+    at = pick_strategy(screened("deal_003"), "use_stated_total")
+    at.selectbox(key="footing_unit").select("104")
+    at.text_input(key="footing_amount").input("36000.00")
+    at.text_input(key="review_note").input("keying the missing rent")
+    at.button(key="review_apply").click()
+    at.run()
+    assert not at.exception, at.exception
+    (o,) = at.session_state["overrides"]
+    assert (o["action"], o["target"], o["corrected_value"]) == (
+        "edit_value",
+        "104:in_place_rent",
+        "36000.00",
+    )
+    assert metrics(at)["Gate state"] == "READY" and export_button(at).proto.disabled is False
+
+
+def test_a_footing_resolution_needs_a_note_too() -> None:
+    at = screened("deal_003")
+    at.text_input(key="review_note").input("short")
+    at.button(key="review_apply").click()
+    at.run()
+    assert [e.value for e in at.error] == ["A reviewer note needs at least 10 characters."]
+    assert at.session_state["overrides"] == []

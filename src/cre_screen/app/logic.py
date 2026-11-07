@@ -12,10 +12,13 @@ from pathlib import Path
 from typing import Any, Literal
 
 from cre_screen.config import ThresholdsConfig
+from cre_screen.errors import ParseError
 from cre_screen.export.uw_math import compute_uw
 from cre_screen.ingest import render
-from cre_screen.review import BUCKETS, remap_target
+from cre_screen.ingest.parse import money_was_rounded, parse_money
+from cre_screen.review import BUCKETS, edit_target, remap_target
 from cre_screen.schemas.citation import Citation
+from cre_screen.schemas.common import to_cents
 from cre_screen.schemas.deal import DealPackage
 from cre_screen.schemas.findings import Finding, Override
 
@@ -288,6 +291,120 @@ def finding_override(
         target=target,
         note=note.strip(),
         at=now or datetime.now(UTC),
+    )
+
+
+# ---------- resolving a footing failure ----------
+
+STRATEGY_LABELS = {
+    "use_calculated_sum": "Use the calculated sum: the printed total is wrong",
+    "use_stated_total": "Use the stated total: correct one unit so the rows sum to it",
+    "edit_line_item": "Edit one line item: fix a unit that was misread, whatever the total",
+}
+
+
+@dataclass(frozen=True)
+class FootingFacts:
+    """The two numbers a footing reviewer has to choose between."""
+
+    column: Literal["in_place_rent", "market_rent"]
+    stated: Decimal
+    calculated: Decimal
+    grand_total: bool  # only a grand total can be replaced by the calculated sum
+
+    @property
+    def difference(self) -> Decimal:
+        return self.calculated - self.stated
+
+    def strategies(self) -> list[str]:
+        both = ["use_calculated_sum", "use_stated_total", "edit_line_item"]
+        return both if self.grand_total else both[1:]
+
+
+def footing_facts(finding: Finding) -> FootingFacts | None:
+    """The stated and calculated figures of an RR_FOOTING finding, or None for other findings."""
+    if finding.check_id != "RR_FOOTING" or "stated" not in finding.details:
+        return None
+    column = finding.details.get("column")
+    if column not in ("in_place_rent", "market_rent"):
+        return None
+    grand_total = "basis" in finding.details
+    calculated = finding.details["computed_all_units" if grand_total else "computed"]
+    return FootingFacts(
+        column,  # type: ignore[arg-type]
+        Decimal(finding.details["stated"]),
+        Decimal(calculated),
+        grand_total,
+    )
+
+
+def parse_amount(raw: str) -> Decimal:
+    """A typed dollar amount, exact to the cent. Floats never enter."""
+    try:
+        value = parse_money(raw)
+    except (ParseError, ArithmeticError) as exc:
+        raise ValueError(f"{raw!r} is not an amount of money.") from exc
+    if value is None:
+        raise ValueError("Enter the corrected amount.")
+    if money_was_rounded(raw):
+        raise ValueError("Amounts have at most two decimal places.")
+    return value
+
+
+def unit_value(pkg: DealPackage, unit_id: str, column: str) -> Decimal:
+    unit = next(u for u in pkg.rent_roll.units if u.unit_id == unit_id)
+    return getattr(unit, column) or Decimal("0.00")
+
+
+def remaining_after_edit(
+    facts: FootingFacts, pkg: DealPackage, unit_id: str, amount: Decimal
+) -> Decimal:
+    """Calculated minus stated once ``unit_id`` carries ``amount``. Zero means it foots."""
+    return facts.difference - unit_value(pkg, unit_id, facts.column) + amount
+
+
+def footing_overrides(
+    pkg: DealPackage,
+    finding: Finding,
+    strategy: str,
+    note: str,
+    *,
+    unit_id: str | None = None,
+    amount: str = "",
+    now: datetime | None = None,
+) -> Override:
+    """The override for one footing resolution. Raises ValueError with a reviewer-facing message."""
+    facts = footing_facts(finding)
+    if facts is None:
+        raise ValueError("This finding is not a rent-roll footing failure.")
+    if strategy not in facts.strategies():
+        raise ValueError("Choose which number governs the model.")
+    stamp = now or datetime.now(UTC)
+    base = {"check_id": "RR_FOOTING", "note": note.strip(), "at": stamp}
+    if strategy == "use_calculated_sum":
+        return Override(
+            action="resolve_footing",
+            target=facts.column,
+            corrected_value=to_cents(facts.calculated),
+            resolution_strategy="use_calculated_sum",
+            **base,  # type: ignore[arg-type]
+        )
+    if not unit_id:
+        raise ValueError("Choose the unit to correct.")
+    value = parse_amount(amount)
+    if strategy == "use_stated_total":
+        left = remaining_after_edit(facts, pkg, unit_id, value)
+        if left != 0:
+            raise ValueError(
+                f"With that amount the rows still miss the stated total by {left}. "
+                "Enter the amount that makes them sum to it."
+            )
+    return Override(
+        action="edit_value",
+        target=edit_target(unit_id, facts.column),
+        corrected_value=value,
+        resolution_strategy=strategy,  # type: ignore[arg-type]
+        **base,  # type: ignore[arg-type]
     )
 
 

@@ -380,3 +380,127 @@ def test_summary_metrics_come_from_the_workbooks_python_mirror(text_pkg) -> None
     )
     assert D("0") < metrics["physical_occupancy"] <= D("1") and metrics["dscr_underwritten"] > 0
     assert cite().page == 1
+
+
+# ---------- resolving a footing failure ----------
+
+
+def footing_finding(pkg):
+    return next(f for f in pkg.findings if f.check_id == "RR_FOOTING")
+
+
+def test_footing_facts_expose_the_two_numbers_to_choose_between(text_pkg) -> None:
+    facts = logic.footing_facts(footing_finding(text_pkg))
+    assert facts is not None and facts.column == "in_place_rent" and facts.grand_total
+    assert (facts.stated, facts.calculated, facts.difference) == (
+        D("73703.00"),
+        D("37703.00"),
+        D("-36000.00"),
+    )
+    assert facts.strategies() == ["use_calculated_sum", "use_stated_total", "edit_line_item"]
+
+
+def test_other_findings_have_no_footing_facts(text_pkg) -> None:
+    other = next(f for f in text_pkg.findings if f.check_id != "RR_FOOTING")
+    assert logic.footing_facts(other) is None
+
+
+def test_a_subtotal_failure_cannot_be_resolved_with_the_calculated_sum() -> None:
+    sub = Finding(
+        check_id="RR_FOOTING",
+        severity="block",
+        message="x",
+        details={
+            "column": "in_place_rent",
+            "scope": "floor",
+            "stated": "10.00",
+            "computed": "9.00",
+        },
+    )
+    facts = logic.footing_facts(sub)
+    assert facts is not None and not facts.grand_total
+    assert facts.strategies() == ["use_stated_total", "edit_line_item"]
+
+
+def test_use_calculated_sum_builds_a_resolve_footing_override_with_the_sum(text_pkg) -> None:
+    o = logic.footing_overrides(
+        text_pkg,
+        footing_finding(text_pkg),
+        "use_calculated_sum",
+        "digits swapped in print",
+        now=NOW,
+    )
+    assert (o.action, o.target, o.corrected_value) == (
+        "resolve_footing",
+        "in_place_rent",
+        D("37703.00"),
+    )
+    assert o.resolution_strategy == "use_calculated_sum" and o.check_id == "RR_FOOTING"
+
+
+def test_use_stated_total_requires_the_amount_that_makes_the_rows_foot(text_pkg) -> None:
+    finding = footing_finding(text_pkg)
+    with pytest.raises(ValueError, match=r"still miss the stated total by -1\.00"):
+        logic.footing_overrides(
+            text_pkg, finding, "use_stated_total", "keying it in", unit_id="104", amount="35999.00"
+        )
+    o = logic.footing_overrides(
+        text_pkg, finding, "use_stated_total", "keying it in", unit_id="104", amount="36000.00"
+    )
+    assert (o.action, o.target, o.corrected_value) == (
+        "edit_value",
+        "104:in_place_rent",
+        D("36000.00"),
+    )
+    assert o.resolution_strategy == "use_stated_total"
+
+
+def test_edit_line_item_accepts_any_amount_and_needs_a_unit(text_pkg) -> None:
+    finding = footing_finding(text_pkg)
+    o = logic.footing_overrides(
+        text_pkg, finding, "edit_line_item", "rent misread", unit_id="104", amount="$1,500.50"
+    )
+    assert o.corrected_value == D("1500.50") and o.resolution_strategy == "edit_line_item"
+    with pytest.raises(ValueError, match="Choose the unit"):
+        logic.footing_overrides(text_pkg, finding, "edit_line_item", "rent misread", amount="1")
+
+
+def test_a_footing_choice_must_be_one_of_the_offered_strategies(text_pkg) -> None:
+    with pytest.raises(ValueError, match="which number governs"):
+        logic.footing_overrides(text_pkg, footing_finding(text_pkg), "just_ignore", "a long note")
+    with pytest.raises(ValueError, match="not a rent-roll footing"):
+        logic.footing_overrides(text_pkg, finding(), "use_calculated_sum", "a long note")
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [("1250", D("1250.00")), ("$1,250.5", D("1250.50")), ("(5.00)", D("-5.00"))],
+)
+def test_parse_amount_is_exact_decimal(raw: str, expected: Decimal) -> None:
+    assert logic.parse_amount(raw) == expected
+
+
+@pytest.mark.parametrize(
+    ("raw", "message"),
+    [("abc", "not an amount"), ("", "Enter the corrected"), ("12.345", "two decimal places")],
+)
+def test_parse_amount_rejects_bad_input(raw: str, message: str) -> None:
+    with pytest.raises(ValueError, match=message):
+        logic.parse_amount(raw)
+
+
+def test_a_chosen_resolution_makes_the_reviewed_package_foot(text_pkg) -> None:
+    from cre_screen.review import apply_review
+
+    o = logic.footing_overrides(
+        text_pkg,
+        footing_finding(text_pkg),
+        "use_stated_total",
+        "keying it in",
+        unit_id="104",
+        amount="36000.00",
+    )
+    reviewed = apply_review(text_pkg, [o], cfg=CFG, deal_dir=DATA / "deal_003")
+    unit = next(u for u in reviewed.rent_roll.units if u.unit_id == "104")
+    assert unit.in_place_rent == D("36000.00")
+    assert not [f for f in reviewed.findings if f.check_id == "RR_FOOTING"]
