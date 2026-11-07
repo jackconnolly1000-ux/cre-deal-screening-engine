@@ -154,3 +154,36 @@ def test_app_passes_the_port_and_the_servers_exit_code(monkeypatch: pytest.Monke
     )
     assert main(["app", "--port", "8123"]) == 7
     assert seen[0][-2:] == ["--server.port", "8123"]
+
+
+def test_budget_sums_the_ledger_by_model_and_task(
+    isolated: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    ledger = isolated / "ledger.jsonl"
+    rows = [
+        ("claude-haiku-5-5", "coa_map", "0.0002557"),
+        ("claude-haiku-5-5", "vision_page", "0.0019000"),
+        ("claude-sonnet-5-5", "coa_map", "0.5000000"),
+    ]
+    ledger.write_text(
+        "".join(
+            f'{{"model": "{m}", "task": "{t}", "cost_usd": "{c}"}}' + chr(10) for m, t, c in rows
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(runtime, "LEDGER", ledger)
+    assert main(["budget"]) == 0
+    out = capsys.readouterr().out
+    assert "(3 API attempts)" in out
+    assert "claude-haiku-5-5: $0.0022" in out and "claude-sonnet-5-5: $0.5000" in out
+    assert "coa_map: $0.5003" in out
+    assert "Lifetime spend: $0.5022 of $10.00 cap" in out
+    assert "Remaining: $9.4978" in out
+
+
+def test_budget_with_no_ledger_reports_zero(
+    isolated: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setattr(runtime, "LEDGER", isolated / "missing.jsonl")
+    assert main(["budget"]) == 0
+    assert "Lifetime spend: $0.0000 of $10.00 cap" in capsys.readouterr().out

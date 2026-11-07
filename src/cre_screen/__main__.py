@@ -12,6 +12,7 @@ from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
+from cre_screen import runtime
 from cre_screen.config import AppConfig, load_config
 from cre_screen.errors import BudgetExceededError, CacheMissError, CreScreenError
 from cre_screen.export.excel_writer import write_workbook
@@ -210,6 +211,35 @@ def cmd_export(args: argparse.Namespace) -> int:
     return _export(pkg, args.out, args.allow_open_blocks, synthetic)
 
 
+def cmd_budget(args: argparse.Namespace) -> int:
+    """Lifetime LLM spend from the ledger, by model and task, and what remains under the cap."""
+    import json
+
+    cap = load_config().models.budget.total_cap_usd
+    by_model: dict[str, Decimal] = {}
+    by_task: dict[str, Decimal] = {}
+    calls = 0
+    if runtime.LEDGER.exists():
+        with runtime.LEDGER.open("r", encoding="utf-8") as fh:
+            for line in fh:
+                if not line.strip():
+                    continue
+                row = json.loads(line)
+                cost = Decimal(row["cost_usd"])
+                by_model[row["model"]] = by_model.get(row["model"], Decimal(0)) + cost
+                by_task[row["task"]] = by_task.get(row["task"], Decimal(0)) + cost
+                calls += 1
+    total = sum(by_model.values(), Decimal(0))
+    print(f"Ledger: {runtime.LEDGER.as_posix()} ({calls} API attempts)")
+    for title, groups in (("By model", by_model), ("By task", by_task)):
+        print(f"{title}:")
+        for name, amount in sorted(groups.items()):
+            print(f"  {name}: ${amount:.4f}")
+    print(f"Lifetime spend: ${total:.4f} of ${cap} cap")
+    print(f"Remaining: ${cap - total:.4f}")
+    return 0
+
+
 APP_SCRIPT = Path(__file__).resolve().parent / "app" / "streamlit_app.py"
 
 
@@ -257,6 +287,8 @@ def build_parser() -> argparse.ArgumentParser:
     export.add_argument("--out", type=Path, required=True)
     export.add_argument("--allow-open-blocks", action="store_true")
     export.set_defaults(func=cmd_export)
+    budget = sub.add_parser("budget", help="show lifetime LLM spend from the ledger")
+    budget.set_defaults(func=cmd_budget)
     app = sub.add_parser("app", help="launch the Streamlit review UI")
     app.add_argument("--port", type=int, default=None)
     app.set_defaults(func=cmd_app)
