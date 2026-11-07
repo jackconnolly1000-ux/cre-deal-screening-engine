@@ -16,6 +16,7 @@ from cre_screen.errors import ParseError
 from cre_screen.export.uw_math import compute_uw
 from cre_screen.ingest import render
 from cre_screen.ingest.parse import money_was_rounded, parse_money
+from cre_screen.ingest.preflight import Diagnostic, preflight
 from cre_screen.review import BUCKETS, edit_target, remap_target
 from cre_screen.schemas.citation import Citation
 from cre_screen.schemas.common import to_cents
@@ -292,6 +293,24 @@ def finding_override(
         note=note.strip(),
         at=now or datetime.now(UTC),
     )
+
+
+# ---------- pre-flight diagnostics ----------
+
+
+def deal_diagnostics(deal_dir: Path) -> list[Diagnostic]:
+    """Plain-English problems with the deal's input files, found before the pipeline runs."""
+    from cre_screen.pipeline import find_input
+
+    return preflight(find_input(deal_dir, "rent_roll"), find_input(deal_dir, "t12", required=False))
+
+
+def diagnostic_markdown(item: Diagnostic) -> str:
+    """The banner text: what is wrong, then numbered remediation steps."""
+    gap = chr(10) * 2
+    steps = chr(10).join(f"{n}. {step}" for n, step in enumerate(item.steps, start=1))
+    head = f"**{item.title}** (`{item.file}`)"
+    return f"{head}{gap}{item.detail}{gap}**What to do**{gap}{steps}"
 
 
 # ---------- resolving a footing failure ----------

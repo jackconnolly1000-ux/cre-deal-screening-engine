@@ -8,6 +8,7 @@ replace it behind the same functions. PyMuPDF 2.x deprecates the ``fitz`` name i
 from __future__ import annotations
 
 import io
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import pymupdf as fitz
@@ -19,6 +20,39 @@ PDF_POINTS_PER_INCH = 72
 def page_count(pdf: Path) -> int:
     with fitz.open(pdf) as doc:
         return doc.page_count
+
+
+@dataclass
+class PdfHealth:
+    """What PyMuPDF can tell us about a PDF before the pipeline touches it."""
+
+    pages: int = 0
+    texts: list[str] = field(default_factory=list)  # text layer of each page
+    image_counts: list[int] = field(default_factory=list)
+    blank_pages: list[int] = field(default_factory=list)  # 1-based, rendered as one flat colour
+    warnings: list[str] = field(default_factory=list)  # MuPDF warnings and errors, one per line
+    open_error: str | None = None
+
+
+def pdf_health(pdf: Path) -> PdfHealth:
+    """Open every page, extract its text and render it small, collecting MuPDF's complaints."""
+    health = PdfHealth()
+    fitz.TOOLS.reset_mupdf_warnings()
+    try:
+        with fitz.open(pdf) as doc:
+            health.pages = doc.page_count
+            for number, page in enumerate(doc, start=1):
+                text = page.get_text()
+                health.texts.append(text)
+                health.image_counts.append(len(page.get_images()))
+                samples = page.get_pixmap(dpi=24).samples
+                if len(set(samples)) <= 1 and not text.strip():
+                    health.blank_pages.append(number)
+    except Exception as exc:
+        health.open_error = str(exc)
+    health.warnings = [w for w in fitz.TOOLS.mupdf_warnings().splitlines() if w.strip()]
+    fitz.TOOLS.reset_mupdf_warnings()
+    return health
 
 
 def render_page_png(pdf: Path, page: int, dpi: int = 110) -> bytes:

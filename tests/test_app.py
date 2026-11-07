@@ -354,3 +354,71 @@ def test_a_footing_resolution_needs_a_note_too() -> None:
     at.run()
     assert [e.value for e in at.error] == ["A reviewer note needs at least 10 characters."]
     assert at.session_state["overrides"] == []
+
+
+# ---------- pre-flight banners ----------
+
+
+def stage_deal(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, rr: Path, t12: Path) -> AppTest:
+    from cre_screen.app import logic
+
+    folder = tmp_path / "staged_deal"
+    folder.mkdir()
+    (folder / "rent_roll.pdf").write_bytes(rr.read_bytes())
+    (folder / "t12.pdf").write_bytes(t12.read_bytes())
+    monkeypatch.setattr(
+        logic, "list_deals", lambda *_a, **_k: [logic.DealRef("staged_deal", folder, "real")]
+    )
+    at = new_app()
+    at.selectbox(key="deal").select("staged_deal")
+    at.button(key="run").click()
+    at.run()
+    return at
+
+
+def test_a_damaged_pdf_shows_a_plain_english_banner_with_steps(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from tests.test_preflight import damaged_pdf, make_pdf
+
+    bad = damaged_pdf(tmp_path / "bad.pdf")
+    good = make_pdf(tmp_path / "good.pdf", [["T-12 FINANCIAL STATEMENT", "Total Income 1 2 3"]])
+    at = stage_deal(tmp_path, monkeypatch, bad, good)
+    assert not at.exception, at.exception
+    (banner,) = at.error
+    assert "This PDF is damaged" in banner.value and "rent_roll.pdf" in banner.value
+    assert "What to do" in banner.value and "1. Download the document again" in banner.value
+    assert not at.metric, "the pipeline did not run"
+
+
+def test_a_brochure_banner_names_the_pages_to_split(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from tests.test_preflight import ROLL_PAGE, T12_PAGE, make_pdf
+
+    pages = [["OFFERING MEMORANDUM"], ["INVESTMENT HIGHLIGHTS"], ["PROPERTY PHOTOS"]]
+    brochure = make_pdf(tmp_path / "package.pdf", [*pages, ["PRO FORMA"], ROLL_PAGE, T12_PAGE])
+    t12 = make_pdf(tmp_path / "t12.pdf", [T12_PAGE])
+    at = stage_deal(tmp_path, monkeypatch, brochure, t12)
+    assert any("whole brochure" in e.value and "page 5" in e.value for e in at.error)
+    assert not at.metric
+
+
+def test_a_wrong_document_banner_appears_for_a_profit_and_loss_rent_roll(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from tests.test_preflight import make_pdf
+
+    pnl = make_pdf(
+        tmp_path / "pnl.pdf",
+        [["Profit & Loss Statement 2024", "Total Income 1600", "Expenses 5"]],
+    )
+    at = stage_deal(tmp_path, monkeypatch, pnl, pnl)
+    messages = " ".join(e.value for e in at.error)
+    assert "profit and loss statement, not a rent roll" in messages
+    assert "same document" in messages and not at.metric
+
+
+def test_a_healthy_deal_still_runs_after_the_preflight() -> None:
+    at = screened("deal_003")
+    assert [e.value for e in at.error] == [] and metrics(at)["Gate state"] == "REVIEW"
