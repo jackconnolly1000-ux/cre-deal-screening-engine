@@ -1,0 +1,365 @@
+{
+  "cost_usd": "0.0018239",
+  "created_at": "2026-11-07T23:19:48+00:00",
+  "key": "8ef938bc9968e188be1c11d462218eefe90aaaa97a3954422b0ede6f4cb68250",
+  "model": "claude-haiku-5-5",
+  "response": {
+    "headers": [
+      "Suite",
+      "Floor Plan",
+      "Bedrooms",
+      "Ba",
+      "Square Feet",
+      "Occ Status",
+      "Contract Rent",
+      "Market Rent",
+      "Move-In",
+      "Lease To",
+      "Concession"
+    ],
+    "rows": [
+      {
+        "cells": {
+          "Ba": "",
+          "Bedrooms": "",
+          "Concession": "",
+          "Contract Rent": "",
+          "Floor Plan": "",
+          "Lease To": "",
+          "Market Rent": "",
+          "Move-In": "",
+          "Occ Status": "",
+          "Square Feet": "",
+          "Suite": "Haynes Court Apartments - Rent Roll (continued)"
+        },
+        "row_kind": "other"
+      },
+      {
+        "cells": {
+          "Ba": "2",
+          "Bedrooms": "2",
+          "Concession": "",
+          "Contract Rent": "$1,547.00",
+          "Floor Plan": "2x2",
+          "Lease To": "01/29/2027",
+          "Market Rent": "$1,547.00",
+          "Move-In": "01/30/2026",
+          "Occ Status": "Current",
+          "Square Feet": "1062",
+          "Suite": "601"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Ba": "1",
+          "Bedrooms": "1",
+          "Concession": "",
+          "Contract Rent": "$1,042.00",
+          "Floor Plan": "1x1",
+          "Lease To": "09/04/2027",
+          "Market Rent": "$1,109.00",
+          "Move-In": "09/05/2026",
+          "Occ Status": "Current",
+          "Square Feet": "759",
+          "Suite": "602"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Ba": "1",
+          "Bedrooms": "1",
+          "Concession": "",
+          "Contract Rent": "$1,043.00",
+          "Floor Plan": "1x1",
+          "Lease To": "10/26/2027",
+          "Market Rent": "$1,086.00",
+          "Move-In": "10/27/2026",
+          "Occ Status": "Current",
+          "Square Feet": "775",
+          "Suite": "603"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Ba": "1",
+          "Bedrooms": "1",
+          "Concession": "",
+          "Contract Rent": "$1,060.00",
+          "Floor Plan": "1x1",
+          "Lease To": "06/26/2027",
+          "Market Rent": "$1,128.00",
+          "Move-In": "06/27/2026",
+          "Occ Status": "Current",
+          "Square Feet": "772",
+          "Suite": "604"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Ba": "1",
+          "Bedrooms": "2",
+          "Concession": "",
+          "Contract Rent": "$1,299.00",
+          "Floor Plan": "2x1",
+          "Lease To": "08/02/2027",
+          "Market Rent": "$1,397.00",
+          "Move-In": "08/03/2026",
+          "Occ Status": "Current",
+          "Square Feet": "869",
+          "Suite": "605"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Ba": "1",
+          "Bedrooms": "1",
+          "Concession": "",
+          "Contract Rent": "$1,060.00",
+          "Floor Plan": "1x1",
+          "Lease To": "03/26/2027",
+          "Market Rent": "$1,116.00",
+          "Move-In": "03/27/2026",
+          "Occ Status": "Current",
+          "Square Feet": "746",
+          "Suite": "606"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Ba": "2",
+          "Bedrooms": "3",
+          "Concession": "",
+          "Contract Rent": "$1,777.00",
+          "Floor Plan": "3x2",
+          "Lease To": "04/13/2027",
+          "Market Rent": "$1,932.00",
+          "Move-In": "04/14/2026",
+          "Occ Status": "Current",
+          "Square Feet": "1379",
+          "Suite": "607"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Ba": "1",
+          "Bedrooms": "2",
+          "Concession": "",
+          "Contract Rent": "$1,343.00",
+          "Floor Plan": "2x1",
+          "Lease To": "05/26/2027",
+          "Market Rent": "$1,357.00",
+          "Move-In": "05/27/2026",
+          "Occ Status": "Current",
+          "Square Feet": "928",
+          "Suite": "608"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Ba": "1",
+          "Bedrooms": "1",
+          "Concession": "",
+          "Contract Rent": "$1,038.00",
+          "Floor Plan": "1x1",
+          "Lease To": "04/07/2027",
+          "Market Rent": "$1,048.00",
+          "Move-In": "04/08/2026",
+          "Occ Status": "Current",
+          "Square Feet": "657",
+          "Suite": "701"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Ba": "1",
+          "Bedrooms": "2",
+          "Concession": "",
+          "Contract Rent": "$1,354.00",
+          "Floor Plan": "2x1",
+          "Lease To": "08/16/2027",
+          "Market Rent": "$1,382.00",
+          "Move-In": "08/17/2026",
+          "Occ Status": "Current",
+          "Square Feet": "938",
+          "Suite": "702"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Ba": "1",
+          "Bedrooms": "1",
+          "Concession": "",
+          "Contract Rent": "$966.00",
+          "Floor Plan": "1x1",
+          "Lease To": "04/25/2027",
+          "Market Rent": "$1,073.00",
+          "Move-In": "04/26/2026",
+          "Occ Status": "Current",
+          "Square Feet": "773",
+          "Suite": "703"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Ba": "1",
+          "Bedrooms": "1",
+          "Concession": "",
+          "Contract Rent": "$1,054.00",
+          "Floor Plan": "1x1",
+          "Lease To": "03/15/2027",
+          "Market Rent": "$1,054.00",
+          "Move-In": "03/16/2026",
+          "Occ Status": "Current",
+          "Square Feet": "753",
+          "Suite": "704"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Ba": "1",
+          "Bedrooms": "1",
+          "Concession": "",
+          "Contract Rent": "$0.00",
+          "Floor Plan": "1x1",
+          "Lease To": "",
+          "Market Rent": "$1,108.00",
+          "Move-In": "",
+          "Occ Status": "Model",
+          "Square Feet": "718",
+          "Suite": "705"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Ba": "2",
+          "Bedrooms": "2",
+          "Concession": "",
+          "Contract Rent": "$0.00",
+          "Floor Plan": "2x2",
+          "Lease To": "07/04/2027",
+          "Market Rent": "$1,600.00",
+          "Move-In": "07/05/2026",
+          "Occ Status": "Current",
+          "Square Feet": "1136",
+          "Suite": "706"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Ba": "1",
+          "Bedrooms": "2",
+          "Concession": "",
+          "Contract Rent": "$1,249.00",
+          "Floor Plan": "2x1",
+          "Lease To": "12/13/2026",
+          "Market Rent": "$1,343.00",
+          "Move-In": "12/14/2025",
+          "Occ Status": "Current",
+          "Square Feet": "926",
+          "Suite": "707"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Ba": "1",
+          "Bedrooms": "1",
+          "Concession": "",
+          "Contract Rent": "$1,020.00",
+          "Floor Plan": "1x1",
+          "Lease To": "04/17/2027",
+          "Market Rent": "$1,074.00",
+          "Move-In": "04/18/2026",
+          "Occ Status": "Current",
+          "Square Feet": "668",
+          "Suite": "708"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Ba": "1",
+          "Bedrooms": "1",
+          "Concession": "",
+          "Contract Rent": "$985.00",
+          "Floor Plan": "1x1",
+          "Lease To": "01/24/2027",
+          "Market Rent": "$1,048.00",
+          "Move-In": "01/25/2026",
+          "Occ Status": "Current",
+          "Square Feet": "772",
+          "Suite": "801"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Ba": "2",
+          "Bedrooms": "2",
+          "Concession": "",
+          "Contract Rent": "$1,535.00",
+          "Floor Plan": "2x2",
+          "Lease To": "02/16/2027",
+          "Market Rent": "$1,566.00",
+          "Move-In": "02/17/2026",
+          "Occ Status": "Current",
+          "Square Feet": "1095",
+          "Suite": "802"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Ba": "2",
+          "Bedrooms": "2",
+          "Concession": "",
+          "Contract Rent": "$1,454.00",
+          "Floor Plan": "2x2",
+          "Lease To": "07/06/2027",
+          "Market Rent": "$1,515.00",
+          "Move-In": "07/07/2026",
+          "Occ Status": "Current",
+          "Square Feet": "1087",
+          "Suite": "803"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "Ba": "1",
+          "Bedrooms": "1",
+          "Concession": "",
+          "Contract Rent": "$958.00",
+          "Floor Plan": "1x1",
+          "Lease To": "06/27/2027",
+          "Market Rent": "$1,064.00",
+          "Move-In": "06/28/2026",
+          "Occ Status": "Current",
+          "Square Feet": "695",
+          "Suite": "804"
+        },
+        "row_kind": "unit"
+      }
+    ]
+  },
+  "task": "vision_page",
+  "usage": {
+    "attempts": 1,
+    "input_tokens": 3739,
+    "output_tokens": 2900
+  }
+}

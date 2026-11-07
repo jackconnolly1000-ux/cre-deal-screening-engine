@@ -1,0 +1,22 @@
+{
+  "cost_usd": "0.0002528",
+  "created_at": "2026-11-07T23:20:05+00:00",
+  "key": "7b5bb8ff06d88e4820d31e87aeb6aef811ae6e4ee07b7c40dafb0c3dbe7ad4a8",
+  "model": "claude-haiku-5-5",
+  "response": {
+    "mappings": [
+      {
+        "bucket": "UNMAPPED",
+        "is_nonrecurring": false,
+        "line_label": "Other Income - Misc Adj",
+        "rationale": "Label is ambiguous ('Misc Adj' could be recurring fees or a one-time adjustment); needs human review."
+      }
+    ]
+  },
+  "task": "coa_map",
+  "usage": {
+    "attempts": 1,
+    "input_tokens": 1908,
+    "output_tokens": 124
+  }
+}

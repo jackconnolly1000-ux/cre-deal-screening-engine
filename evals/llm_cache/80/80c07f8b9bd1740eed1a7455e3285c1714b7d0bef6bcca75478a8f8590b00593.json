@@ -1,0 +1,365 @@
+{
+  "cost_usd": "0.0018324",
+  "created_at": "2026-11-07T23:20:23+00:00",
+  "key": "80c07f8b9bd1740eed1a7455e3285c1714b7d0bef6bcca75478a8f8590b00593",
+  "model": "claude-haiku-5-5",
+  "response": {
+    "headers": [
+      "Unit",
+      "Floorplan",
+      "Bd",
+      "BA",
+      "Sq Ft",
+      "Status",
+      "Charged Rent",
+      "Market",
+      "Lease Begin",
+      "Expiration",
+      "Concession"
+    ],
+    "rows": [
+      {
+        "cells": {
+          "BA": "",
+          "Bd": "",
+          "Charged Rent": "",
+          "Concession": "",
+          "Expiration": "",
+          "Floorplan": "",
+          "Lease Begin": "",
+          "Market": "",
+          "Sq Ft": "",
+          "Status": "",
+          "Unit": "Benjamin Flats Apartments - Rent Roll (continued)"
+        },
+        "row_kind": "other"
+      },
+      {
+        "cells": {
+          "BA": "1",
+          "Bd": "1",
+          "Charged Rent": "1693.11",
+          "Concession": "",
+          "Expiration": "2027-07-26",
+          "Floorplan": "1x1",
+          "Lease Begin": "2026-07-27",
+          "Market": "1512",
+          "Sq Ft": "662",
+          "Status": "Occupied",
+          "Unit": "401"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "BA": "1",
+          "Bd": "1",
+          "Charged Rent": "1671.62",
+          "Concession": "",
+          "Expiration": "2027-07-25",
+          "Floorplan": "1x1",
+          "Lease Begin": "2026-07-26",
+          "Market": "1478",
+          "Sq Ft": "668",
+          "Status": "Occupied",
+          "Unit": "403"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "BA": "1",
+          "Bd": "1",
+          "Charged Rent": "1600.37",
+          "Concession": "",
+          "Expiration": "2027-02-02",
+          "Floorplan": "1x1",
+          "Lease Begin": "2026-02-03",
+          "Market": "1429",
+          "Sq Ft": "703",
+          "Status": "Occupied",
+          "Unit": "406"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "BA": "1",
+          "Bd": "1",
+          "Charged Rent": "1540.42",
+          "Concession": "",
+          "Expiration": "2027-03-09",
+          "Floorplan": "1x1",
+          "Lease Begin": "2026-03-10",
+          "Market": "1513",
+          "Sq Ft": "777",
+          "Status": "Occupied",
+          "Unit": "407"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "BA": "1",
+          "Bd": "1",
+          "Charged Rent": "1676.14",
+          "Concession": "",
+          "Expiration": "2026-11-26",
+          "Floorplan": "1x1",
+          "Lease Begin": "2025-11-27",
+          "Market": "1528",
+          "Sq Ft": "775",
+          "Status": "Occupied",
+          "Unit": "504"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "BA": "1",
+          "Bd": "1",
+          "Charged Rent": "1575.48",
+          "Concession": "",
+          "Expiration": "2027-07-24",
+          "Floorplan": "1x1",
+          "Lease Begin": "2026-07-25",
+          "Market": "1466",
+          "Sq Ft": "712",
+          "Status": "Occupied",
+          "Unit": "506"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "BA": "1",
+          "Bd": "1",
+          "Charged Rent": "1711.20",
+          "Concession": "",
+          "Expiration": "2026-12-26",
+          "Floorplan": "1x1",
+          "Lease Begin": "2025-12-27",
+          "Market": "1513",
+          "Sq Ft": "681",
+          "Status": "Occupied",
+          "Unit": "507"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "BA": "1",
+          "Bd": "1",
+          "Charged Rent": "1584.53",
+          "Concession": "",
+          "Expiration": "2027-01-05",
+          "Floorplan": "1x1",
+          "Lease Begin": "2026-01-06",
+          "Market": "1475",
+          "Sq Ft": "666",
+          "Status": "Occupied",
+          "Unit": "508"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "BA": "1",
+          "Bd": "1",
+          "Charged Rent": "1606.02",
+          "Concession": "",
+          "Expiration": "2026-12-07",
+          "Floorplan": "1x1",
+          "Lease Begin": "2025-12-08",
+          "Market": "1479",
+          "Sq Ft": "729",
+          "Status": "Occupied",
+          "Unit": "601"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "BA": "1",
+          "Bd": "1",
+          "Charged Rent": "1514.41",
+          "Concession": "",
+          "Expiration": "2027-01-06",
+          "Floorplan": "1x1",
+          "Lease Begin": "2026-01-07",
+          "Market": "1471",
+          "Sq Ft": "715",
+          "Status": "Occupied",
+          "Unit": "608"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "BA": "1",
+          "Bd": "1",
+          "Charged Rent": "1555.13",
+          "Concession": "",
+          "Expiration": "2027-04-05",
+          "Floorplan": "1x1",
+          "Lease Begin": "2026-04-06",
+          "Market": "1478",
+          "Sq Ft": "705",
+          "Status": "Occupied",
+          "Unit": "702"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "BA": "1",
+          "Bd": "1",
+          "Charged Rent": "1515.54",
+          "Concession": "",
+          "Expiration": "2027-01-20",
+          "Floorplan": "1x1",
+          "Lease Begin": "2026-01-21",
+          "Market": "1441",
+          "Sq Ft": "716",
+          "Status": "Occupied",
+          "Unit": "703"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "BA": "1",
+          "Bd": "1",
+          "Charged Rent": "1609.41",
+          "Concession": "",
+          "Expiration": "2027-07-26",
+          "Floorplan": "1x1",
+          "Lease Begin": "2026-07-27",
+          "Market": "1498",
+          "Sq Ft": "768",
+          "Status": "Occupied",
+          "Unit": "705"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "BA": "1",
+          "Bd": "1",
+          "Charged Rent": "1492.92",
+          "Concession": "",
+          "Expiration": "2027-07-30",
+          "Floorplan": "1x1",
+          "Lease Begin": "2026-07-31",
+          "Market": "1435",
+          "Sq Ft": "792",
+          "Status": "Occupied",
+          "Unit": "707"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "BA": "1",
+          "Bd": "1",
+          "Charged Rent": "1469.17",
+          "Concession": "",
+          "Expiration": "2027-03-19",
+          "Floorplan": "1x1",
+          "Lease Begin": "2026-03-20",
+          "Market": "1428",
+          "Sq Ft": "690",
+          "Status": "Occupied",
+          "Unit": "801"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "BA": "1",
+          "Bd": "1",
+          "Charged Rent": "1563.04",
+          "Concession": "",
+          "Expiration": "2027-05-07",
+          "Floorplan": "1x1",
+          "Lease Begin": "2026-05-08",
+          "Market": "1425",
+          "Sq Ft": "691",
+          "Status": "Occupied",
+          "Unit": "802"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "BA": "",
+          "Bd": "",
+          "Charged Rent": "46234.16",
+          "Concession": "",
+          "Expiration": "",
+          "Floorplan": "",
+          "Lease Begin": "",
+          "Market": "42795",
+          "Sq Ft": "",
+          "Status": "",
+          "Unit": "Subtotal 1x1"
+        },
+        "row_kind": "subtotal"
+      },
+      {
+        "cells": {
+          "BA": "1",
+          "Bd": "2",
+          "Charged Rent": "1975.86",
+          "Concession": "",
+          "Expiration": "2026-10-16",
+          "Floorplan": "2x1",
+          "Lease Begin": "2025-10-17",
+          "Market": "1765",
+          "Sq Ft": "883",
+          "Status": "Occupied",
+          "Unit": "103"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "BA": "1",
+          "Bd": "2",
+          "Charged Rent": "2031.28",
+          "Concession": "",
+          "Expiration": "2027-05-05",
+          "Floorplan": "2x1",
+          "Lease Begin": "2026-05-06",
+          "Market": "1814",
+          "Sq Ft": "878",
+          "Status": "Occupied",
+          "Unit": "106"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "BA": "1",
+          "Bd": "2",
+          "Charged Rent": "",
+          "Concession": "",
+          "Expiration": "",
+          "Floorplan": "2x1",
+          "Lease Begin": "",
+          "Market": "1847",
+          "Sq Ft": "899",
+          "Status": "Vacant",
+          "Unit": "301"
+        },
+        "row_kind": "unit"
+      }
+    ]
+  },
+  "task": "vision_page",
+  "usage": {
+    "attempts": 1,
+    "input_tokens": 3739,
+    "output_tokens": 2917
+  }
+}

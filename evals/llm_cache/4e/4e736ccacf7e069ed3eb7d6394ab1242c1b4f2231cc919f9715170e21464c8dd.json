@@ -1,0 +1,141 @@
+{
+  "cost_usd": "0.0008779",
+  "created_at": "2026-11-07T23:20:34+00:00",
+  "key": "4e736ccacf7e069ed3eb7d6394ab1242c1b4f2231cc919f9715170e21464c8dd",
+  "model": "claude-haiku-5-5",
+  "response": {
+    "headers": [
+      "Unit",
+      "Floorplan",
+      "Bd",
+      "BA",
+      "Sq Ft",
+      "Status",
+      "Charged Rent",
+      "Market",
+      "Lease Begin",
+      "Expiration",
+      "Concession"
+    ],
+    "rows": [
+      {
+        "cells": {
+          "BA": "",
+          "Bd": "",
+          "Charged Rent": "",
+          "Concession": "",
+          "Expiration": "",
+          "Floorplan": "",
+          "Lease Begin": "",
+          "Market": "",
+          "Sq Ft": "",
+          "Status": "",
+          "Unit": "Benjamin Flats Apartments - Rent Roll (continued)"
+        },
+        "row_kind": "other"
+      },
+      {
+        "cells": {
+          "BA": "2",
+          "Bd": "3",
+          "Charged Rent": "2778.87",
+          "Concession": "",
+          "Expiration": "2027-05-01",
+          "Floorplan": "3x2",
+          "Lease Begin": "2026-05-02",
+          "Market": "2533",
+          "Sq Ft": "1388",
+          "Status": "Occupied",
+          "Unit": "505"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "BA": "2",
+          "Bd": "3",
+          "Charged Rent": "2921.37",
+          "Concession": "",
+          "Expiration": "2027-06-21",
+          "Floorplan": "3x2",
+          "Lease Begin": "2026-06-22",
+          "Market": "2636",
+          "Sq Ft": "1242",
+          "Status": "Occupied",
+          "Unit": "606"
+        },
+        "row_kind": "unit"
+      },
+      {
+        "cells": {
+          "BA": "",
+          "Bd": "",
+          "Charged Rent": "8640.84",
+          "Concession": "",
+          "Expiration": "",
+          "Floorplan": "",
+          "Lease Begin": "",
+          "Market": "7795",
+          "Sq Ft": "",
+          "Status": "",
+          "Unit": "Subtotal 3x2"
+        },
+        "row_kind": "subtotal"
+      },
+      {
+        "cells": {
+          "BA": "",
+          "Bd": "",
+          "Charged Rent": "97963.86",
+          "Concession": "",
+          "Expiration": "",
+          "Floorplan": "",
+          "Lease Begin": "",
+          "Market": "96627",
+          "Sq Ft": "",
+          "Status": "",
+          "Unit": "Total"
+        },
+        "row_kind": "subtotal"
+      },
+      {
+        "cells": {
+          "BA": "",
+          "Bd": "",
+          "Charged Rent": "",
+          "Concession": "",
+          "Expiration": "",
+          "Floorplan": "",
+          "Lease Begin": "",
+          "Market": "",
+          "Sq Ft": "",
+          "Status": "",
+          "Unit": "Rents are scheduled monthly amounts in US dollars."
+        },
+        "row_kind": "footnote"
+      },
+      {
+        "cells": {
+          "BA": "",
+          "Bd": "",
+          "Charged Rent": "",
+          "Concession": "",
+          "Expiration": "",
+          "Floorplan": "",
+          "Lease Begin": "",
+          "Market": "",
+          "Sq Ft": "",
+          "Status": "",
+          "Unit": "Vacant units show no lease dates or in-place rent."
+        },
+        "row_kind": "footnote"
+      }
+    ]
+  },
+  "task": "vision_page",
+  "usage": {
+    "attempts": 1,
+    "input_tokens": 3739,
+    "output_tokens": 1008
+  }
+}
