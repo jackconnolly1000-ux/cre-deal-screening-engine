@@ -1,0 +1,80 @@
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+
+from cre_screen import runtime
+from cre_screen.__main__ import main
+
+DATA = Path(__file__).resolve().parents[1] / "data" / "synthetic"
+
+
+@pytest.fixture(autouse=True)
+def isolated(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Path:
+    """Replay mode, an empty LLM cache, and a scratch working directory for out/."""
+    monkeypatch.setenv("CRE_LLM_CACHE_MODE", "replay")
+    monkeypatch.setattr(runtime, "REPO_ROOT", tmp_path)
+    monkeypatch.chdir(tmp_path)
+    return tmp_path
+
+
+def test_clean_deal_ends_ready(capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["run", str(DATA / "deal_001")]) == 0
+    out = capsys.readouterr().out
+    assert "Gate: FOOTING -> CHECKS -> READY" in out
+    assert "Findings: 0 block, 0 warn, 0 info   Open blocks: 0" in out
+    assert "Final state: READY" in out
+    assert "Cost this run: $0.00 (cache mode: replay)" in out
+
+
+def test_trap_deal_lists_findings_by_severity_with_the_footing_cause(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    assert main(["run", str(DATA / "deal_003")]) == 0
+    out = capsys.readouterr().out
+    assert "Gate: FOOTING -> REEXTRACT -> CHECKS -> REVIEW" in out
+    assert "[block] RR_FOOTING:" in out and "(cause: document)" in out
+    assert out.index("[block]") < out.index("[warn]") < out.index("[info]")
+    assert "Final state: REVIEW" in out and "Open blocks: 1" in out
+
+
+def test_screen_is_an_alias_for_run(capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["screen", str(DATA / "deal_002")]) == 0
+    assert "Final state: READY" in capsys.readouterr().out
+
+
+def test_package_is_written_under_out(isolated: Path) -> None:
+    assert main(["run", str(DATA / "deal_001")]) == 0
+    assert (isolated / "out" / "deal_001" / "package.json").exists()
+
+
+def test_as_of_argument_is_used(capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["run", str(DATA / "deal_001"), "--as-of", "2030-01-01"]) == 0
+    out = capsys.readouterr().out
+    assert "as of 2030-01-01" in out and "RR_EXPIRED_LEASE" in out
+
+
+def test_export_is_not_available_until_m5(capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["run", str(DATA / "deal_001"), "--export", "x.xlsx"]) == 2
+    assert "M5" in capsys.readouterr().err
+
+
+def test_unrecorded_llm_call_exits_4(capsys: pytest.CaptureFixture[str]) -> None:
+    # deal_005 has a one-time income label the synonym table cannot place; the cache is empty here
+    assert main(["run", str(DATA / "deal_005")]) == 4
+    assert "cache miss in replay mode: task=coa_map" in capsys.readouterr().err
+
+
+def test_missing_inputs_exit_2(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["run", str(tmp_path)]) == 2
+    assert "needs exactly one rent_roll" in capsys.readouterr().err
+
+
+def test_a_run_cap_below_the_worst_case_exits_3_before_any_call(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setenv("CRE_LLM_CACHE_MODE", "record")
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    assert main(["run", str(DATA / "deal_005"), "--run-cap", "0.0000001"]) == 3
+    assert "run cap" in capsys.readouterr().err

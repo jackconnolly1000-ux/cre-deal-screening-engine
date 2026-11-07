@@ -4,81 +4,30 @@ from __future__ import annotations
 
 import argparse
 import logging
-import os
 import sys
-import uuid
 from collections import Counter
-from datetime import UTC, date, datetime
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
-from cre_screen.config import DEFAULT_CONFIG_DIR, AppConfig, load_config
+from cre_screen.config import AppConfig, load_config
 from cre_screen.errors import BudgetExceededError, CacheMissError, CreScreenError
 from cre_screen.extract.rent_roll import build_rent_roll
 from cre_screen.extract.t12 import build_t12
-from cre_screen.ingest.excel_tables import extract_excel_table
 from cre_screen.ingest.parse import parse_date
-from cre_screen.ingest.pdf_tables import extract_pdf_t12_table, extract_pdf_table
-from cre_screen.ingest.raw import RawTable
+from cre_screen.ingest.pdf_tables import extract_pdf_t12_table
 from cre_screen.ingest.router import detect_format
-from cre_screen.mapping.cache import LLMCache
 from cre_screen.mapping.coa_mapper import load_learned
-from cre_screen.mapping.cost import CostTracker
 from cre_screen.mapping.header_mapper import map_headers
-from cre_screen.mapping.llm_client import AnthropicLLMClient
+from cre_screen.pipeline import find_input, read_rr_table, run_deal, sample_rows
 from cre_screen.reconcile.checks import rr_footing, t12_footing
 from cre_screen.reconcile.context import CheckContext
+from cre_screen.runtime import LEARNED, make_llm, with_overrides
 from cre_screen.schemas.rent_roll import RentRoll
 
 EXIT_OK, EXIT_BAD_INPUT, EXIT_BUDGET, EXIT_CACHE_MISS = 0, 2, 3, 4
-REPO_ROOT = DEFAULT_CONFIG_DIR.parent
 CACHE_DIR = Path("out") / "cache" / "extract"
-LEDGER = REPO_ROOT / ".cost_ledger.jsonl"
-LEARNED = DEFAULT_CONFIG_DIR / "coa_learned.yaml"
-
-
-def _load_dotenv(path: Path) -> None:
-    """Read KEY=VALUE lines from a gitignored .env without overriding the shell."""
-    if not path.exists():
-        return
-    for raw in path.read_text(encoding="utf-8").splitlines():
-        line = raw.strip()
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-        key, _, value = line.partition("=")
-        os.environ.setdefault(key.strip(), value.strip().strip("'\""))
-
-
-def _make_llm(cfg: AppConfig) -> tuple[AnthropicLLMClient, CostTracker, LLMCache]:
-    _load_dotenv(REPO_ROOT / ".env")
-    run_id = f"{datetime.now(UTC):%Y%m%dT%H%M%S}-{uuid.uuid4().hex[:8]}"
-    cache_dir = cfg.models.cache.dir
-    if not cache_dir.is_absolute():
-        cache_dir = REPO_ROOT / cache_dir
-    cache = LLMCache(cache_dir, mode=cfg.models.cache.mode, version=cfg.models.cache.version)
-    tracker = CostTracker(cfg.models, LEDGER, run_id=run_id)
-    return AnthropicLLMClient(cfg.models, cache, tracker), tracker, cache
-
-
-def _find_input(deal_dir: Path, stem: str) -> Path:
-    found = [p for p in (deal_dir / f"{stem}.pdf", deal_dir / f"{stem}.xlsx") if p.exists()]
-    if len(found) != 1:
-        raise CreScreenError(f"{deal_dir.as_posix()} needs exactly one {stem}.pdf or {stem}.xlsx")
-    return found[0]
-
-
-def _read_rr_table(path: Path, cfg: AppConfig, sheet: str | None) -> RawTable:
-    fmt = detect_format(path)
-    if fmt == "pdf_scanned":
-        raise CreScreenError(f"{path.name} is a scanned PDF; the vision path is not built yet")
-    if fmt == "xlsx":
-        return extract_excel_table(path, cfg.rr_headers, sheet=sheet)
-    return extract_pdf_table(path, cfg.rr_headers, cache_dir=CACHE_DIR)
-
-
-def _sample_rows(table: RawTable) -> list[dict[str, str]]:
-    units = [r for r in table.rows if r.kind == "unit"][:3]
-    return [{h: c.text for h, c in r.cells.items()} for r in units]
+SEVERITY_ORDER = ("block", "warn", "info")
 
 
 def _money(value: Decimal) -> str:
@@ -98,12 +47,13 @@ def _resolve_as_of(rent_roll: RentRoll, override: str | None) -> date:
 
 def cmd_extract_rr(args: argparse.Namespace) -> int:
     cfg = load_config()
-    llm, tracker, _cache = _make_llm(cfg)
+    llm, tracker, _cache = make_llm(cfg)
     deal_dir: Path = args.deal_dir
-    path = _find_input(deal_dir, "rent_roll")
-    table = _read_rr_table(path, cfg, args.sheet)
+    path = find_input(deal_dir, "rent_roll")
+    assert path is not None
+    table = read_rr_table(path, cfg, args.sheet, CACHE_DIR)
     header_map, header_warnings = map_headers(
-        table.headers, _sample_rows(table), cfg.rr_headers, llm
+        table.headers, sample_rows(table), cfg.rr_headers, llm
     )
     rent_roll = build_rent_roll(table, header_map, cfg, llm=llm)
     as_of = _resolve_as_of(rent_roll, args.as_of)
@@ -152,9 +102,10 @@ def cmd_extract_rr(args: argparse.Namespace) -> int:
 
 def cmd_extract_t12(args: argparse.Namespace) -> int:
     cfg = load_config()
-    llm, tracker, cache = _make_llm(cfg)
+    llm, tracker, cache = make_llm(cfg)
     deal_dir: Path = args.deal_dir
-    path = _find_input(deal_dir, "t12")
+    path = find_input(deal_dir, "t12")
+    assert path is not None
     fmt = detect_format(path)
     if fmt != "pdf_text":
         raise CreScreenError(f"{path.name}: only text-layer PDF T-12s are supported so far ({fmt})")
@@ -183,6 +134,46 @@ def cmd_extract_t12(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def cmd_run(args: argparse.Namespace) -> int:
+    if args.export is not None:
+        raise CreScreenError("--export arrives with the Excel export milestone (M5)")
+    cfg: AppConfig = with_overrides(
+        load_config(),
+        model=args.model,
+        run_cap=Decimal(args.run_cap) if args.run_cap else None,
+    )
+    llm, tracker, cache = make_llm(cfg)
+    deal_dir: Path = args.deal_dir
+    as_of = parse_date(args.as_of) if args.as_of else None
+    pkg = run_deal(deal_dir, llm=llm, cfg=cfg, as_of=as_of, tracker=tracker, learned_path=LEARNED)
+
+    print(f"{pkg.deal_id}: {pkg.rent_roll.source_file}, as of {pkg.rent_roll.as_of_date}")
+    print(
+        f"Units: {len(pkg.rent_roll.units)}   T-12 lines: "
+        f"{len(pkg.t12.lines) if pkg.t12 else 'none'}   Pro forma: "
+        f"{'yes' if pkg.proforma else 'none'}"
+    )
+    print("Gate: " + " -> ".join([pkg.gate_log[0].from_state, *(t.to_state for t in pkg.gate_log)]))
+    counts = Counter(f.severity for f in pkg.findings)
+    print(
+        "Findings: "
+        + ", ".join(f"{counts.get(s, 0)} {s}" for s in SEVERITY_ORDER)
+        + f"   Open blocks: {len(pkg.open_blocks())}"
+    )
+    for severity in SEVERITY_ORDER:
+        for finding in pkg.findings:
+            if finding.severity != severity:
+                continue
+            cause = f" (cause: {finding.details['cause']})" if "cause" in finding.details else ""
+            print(f"  [{severity}] {finding.check_id}: {finding.message}{cause}")
+    for warning in pkg.rent_roll.extraction_warnings:
+        print(f"warning: {warning}")
+    print(f"Final state: {pkg.final_state}")
+    print(f"Package: out/{pkg.deal_id}/package.json")
+    print(f"Cost this run: {_money(pkg.cost_usd)} (cache mode: {cache.mode})")
+    return EXIT_OK
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="python -m cre_screen")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -195,6 +186,16 @@ def build_parser() -> argparse.ArgumentParser:
     t12.add_argument("deal_dir", type=Path)
     t12.add_argument("--sheet", default=None)
     t12.set_defaults(func=cmd_extract_t12)
+    run = sub.add_parser(
+        "run", aliases=["screen"], help="full pipeline: extract, reconcile, write the package"
+    )
+    run.add_argument("deal_dir", type=Path)
+    run.add_argument("--as-of", dest="as_of", default=None, help="YYYY-MM-DD")
+    run.add_argument("--export", default=None, help="workbook path (arrives in M5)")
+    run.add_argument("--allow-open-blocks", action="store_true")
+    run.add_argument("--model", default=None)
+    run.add_argument("--run-cap", dest="run_cap", default=None, help="USD, e.g. 1.00")
+    run.set_defaults(func=cmd_run)
     return parser
 
 

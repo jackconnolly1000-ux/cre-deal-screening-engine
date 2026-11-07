@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+from cre_screen import runtime
 from cre_screen.__main__ import main
 
 DATA = Path(__file__).resolve().parents[1] / "data" / "synthetic"
@@ -32,7 +33,10 @@ def test_footing_trap_deal_reports_the_failing_line(capsys: pytest.CaptureFixtur
     assert "T-12 footing: FAIL" in out and "[block]" in out and "Landscaping" in out
 
 
-def test_replay_miss_exits_4_with_a_clear_message(capsys: pytest.CaptureFixture[str]) -> None:
+def test_replay_miss_exits_4_with_a_clear_message(
+    capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setattr(runtime, "REPO_ROOT", tmp_path)  # an empty cache, whatever gets recorded
     # deal_005 has a one-time income label outside the synonym table, so it needs the LLM
     assert main(["extract-t12", str(DATA / "deal_005")]) == 4
     assert "cache miss in replay mode: task=coa_map" in capsys.readouterr().err
