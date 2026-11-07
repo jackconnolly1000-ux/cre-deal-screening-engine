@@ -24,15 +24,15 @@ LEFT = 36
 COLUMNS: tuple[tuple[str, int, str], ...] = (
     ("unit_id", 62, "l"),
     ("unit_type", 55, "l"),
-    ("beds", 35, "r"),
-    ("baths", 35, "r"),
+    ("beds", 47, "r"),
+    ("baths", 47, "r"),
     ("sq_ft", 55, "r"),
     ("status", 70, "l"),
     ("in_place_rent", 70, "r"),
     ("market_rent", 70, "r"),
     ("lease_start", 70, "l"),
     ("lease_end", 70, "l"),
-    ("concession_note", 128, "l"),
+    ("concession_note", 104, "l"),
 )
 
 

@@ -509,3 +509,18 @@ def test_pf_mgmt_fee_trap(n: int, builds: dict[int, DealBuild]) -> None:
         D(0),
     )
     assert D("0.04") - D("0.001") <= uw_total(b, "MANAGEMENT_FEE") / egi <= D("0.05") + D("0.001")
+
+
+def test_every_possible_rent_roll_header_fits_its_column() -> None:
+    """A header wider than its column runs into its neighbour and merges into one phrase."""
+    from reportlab.pdfbase.pdfmetrics import stringWidth
+
+    from cre_screen.config import load_config
+    from synth.layouts.rr_classic import COLUMNS
+
+    synonyms = load_config().rr_headers.fields
+    insets = 6 + 3  # left padding plus right padding used by the layout
+    assert sum(width for _f, width, _a in COLUMNS) == 720
+    for field, width, _align in COLUMNS:
+        for header in synonyms[field]:
+            assert stringWidth(header, "Helvetica-Bold", 7) + insets <= width, (field, header)
