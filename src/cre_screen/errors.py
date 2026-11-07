@@ -70,3 +70,7 @@ class T12ExtractError(CreScreenError):
 
 class OverrideError(CreScreenError):
     """An override is malformed or cannot be applied by the gate."""
+
+
+class ExportError(CreScreenError):
+    """The workbook cannot be built, for example when a tab would exceed its row limit."""
