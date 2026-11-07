@@ -7,8 +7,8 @@
   "scanned": false,
   "seed": 7,
   "split": "dev",
-  "t12_format": "pdf_text",
-  "t12_layout": "t12_grid",
+  "t12_format": "xlsx",
+  "t12_layout": "t12_excel",
   "traps": [
     "TRAP_RR_HIDDEN_CONCESSION",
     "TRAP_T12_ONE_TIME_INCOME",

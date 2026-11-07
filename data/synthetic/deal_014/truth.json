@@ -3,9 +3,9 @@
   "seed": 7,
   "split": "dev",
   "rr_layout": "rr_classic",
-  "t12_layout": "t12_grid",
+  "t12_layout": "t12_excel",
   "rr_format": "pdf_text",
-  "t12_format": "pdf_text",
+  "t12_format": "xlsx",
   "as_of_date": "2026-07-31",
   "units": [
     {

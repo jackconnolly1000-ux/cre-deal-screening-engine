@@ -3,12 +3,12 @@
   "deal_seed": 14,
   "property_name": "Rodriguez Terrace Apartments",
   "rr_format": "pdf_text",
-  "rr_layout": "rr_classic",
+  "rr_layout": "rr_wide",
   "scanned": false,
   "seed": 7,
   "split": "dev",
   "t12_format": "pdf_text",
-  "t12_layout": "t12_grid",
+  "t12_layout": "t12_sections",
   "traps": [
     "TRAP_RR_ZERO_RENT",
     "TRAP_PF_MGMT_FEE"

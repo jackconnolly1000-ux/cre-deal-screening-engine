@@ -3,8 +3,8 @@
   "seed": 7,
   "split": "dev",
   "rr_layout": "rr_classic",
-  "t12_layout": "t12_grid",
-  "rr_format": "pdf_text",
+  "t12_layout": "t12_sections",
+  "rr_format": "pdf_scanned",
   "t12_format": "pdf_text",
   "as_of_date": "2026-10-31",
   "units": [

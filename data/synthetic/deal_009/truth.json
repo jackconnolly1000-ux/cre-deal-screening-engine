@@ -2,10 +2,10 @@
   "deal_id": "deal_009",
   "seed": 7,
   "split": "dev",
-  "rr_layout": "rr_classic",
-  "t12_layout": "t12_grid",
-  "rr_format": "pdf_text",
-  "t12_format": "pdf_text",
+  "rr_layout": "rr_excel",
+  "t12_layout": "t12_excel",
+  "rr_format": "xlsx",
+  "t12_format": "xlsx",
   "as_of_date": "2026-08-31",
   "units": [
     {
@@ -20,7 +20,7 @@
       "lease_start": "2026-08-17",
       "lease_end": "2027-08-16",
       "concession_note": null,
-      "page": 1
+      "page": null
     },
     {
       "unit_id": "102",
@@ -34,7 +34,7 @@
       "lease_start": "2025-10-05",
       "lease_end": "2026-10-04",
       "concession_note": "1 mo free on 12 mo lease",
-      "page": 1
+      "page": null
     },
     {
       "unit_id": "103",
@@ -48,7 +48,7 @@
       "lease_start": "2026-05-19",
       "lease_end": "2027-05-18",
       "concession_note": null,
-      "page": 1
+      "page": null
     },
     {
       "unit_id": "104",
@@ -62,7 +62,7 @@
       "lease_start": "2026-06-19",
       "lease_end": "2027-06-18",
       "concession_note": null,
-      "page": 1
+      "page": null
     },
     {
       "unit_id": "105",
@@ -76,7 +76,7 @@
       "lease_start": "2025-10-11",
       "lease_end": "2026-10-10",
       "concession_note": null,
-      "page": 1
+      "page": null
     },
     {
       "unit_id": "106",
@@ -90,7 +90,7 @@
       "lease_start": "2026-02-01",
       "lease_end": "2027-01-31",
       "concession_note": "$100 off/mo",
-      "page": 1
+      "page": null
     },
     {
       "unit_id": "107",
@@ -104,7 +104,7 @@
       "lease_start": "2026-07-16",
       "lease_end": "2027-07-15",
       "concession_note": null,
-      "page": 1
+      "page": null
     },
     {
       "unit_id": "108",
@@ -118,7 +118,7 @@
       "lease_start": "2026-04-18",
       "lease_end": "2027-04-17",
       "concession_note": "$150 off/mo",
-      "page": 1
+      "page": null
     },
     {
       "unit_id": "201",
@@ -132,7 +132,7 @@
       "lease_start": "2026-04-05",
       "lease_end": "2027-04-04",
       "concession_note": null,
-      "page": 1
+      "page": null
     },
     {
       "unit_id": "202",
@@ -146,7 +146,7 @@
       "lease_start": "2026-01-24",
       "lease_end": "2027-01-23",
       "concession_note": "$100 off/mo",
-      "page": 1
+      "page": null
     },
     {
       "unit_id": "203",
@@ -160,7 +160,7 @@
       "lease_start": "2026-03-12",
       "lease_end": "2027-03-11",
       "concession_note": null,
-      "page": 1
+      "page": null
     },
     {
       "unit_id": "204",
@@ -174,7 +174,7 @@
       "lease_start": "2026-03-18",
       "lease_end": "2027-03-17",
       "concession_note": null,
-      "page": 1
+      "page": null
     },
     {
       "unit_id": "205",
@@ -188,7 +188,7 @@
       "lease_start": "2026-02-10",
       "lease_end": "2027-02-09",
       "concession_note": null,
-      "page": 1
+      "page": null
     },
     {
       "unit_id": "206",
@@ -202,7 +202,7 @@
       "lease_start": "2026-05-23",
       "lease_end": "2027-05-22",
       "concession_note": null,
-      "page": 1
+      "page": null
     },
     {
       "unit_id": "207",
@@ -216,7 +216,7 @@
       "lease_start": "2026-03-13",
       "lease_end": "2027-03-12",
       "concession_note": null,
-      "page": 1
+      "page": null
     },
     {
       "unit_id": "208",
@@ -230,7 +230,7 @@
       "lease_start": "2026-04-26",
       "lease_end": "2027-04-25",
       "concession_note": "$100 off/mo",
-      "page": 1
+      "page": null
     },
     {
       "unit_id": "301",
@@ -244,7 +244,7 @@
       "lease_start": "2026-01-08",
       "lease_end": "2027-01-07",
       "concession_note": "1 mo free on 12 mo lease",
-      "page": 1
+      "page": null
     },
     {
       "unit_id": "302",
@@ -258,7 +258,7 @@
       "lease_start": "2026-08-19",
       "lease_end": "2027-08-18",
       "concession_note": null,
-      "page": 1
+      "page": null
     },
     {
       "unit_id": "303",
@@ -272,7 +272,7 @@
       "lease_start": "2025-11-29",
       "lease_end": "2026-11-28",
       "concession_note": null,
-      "page": 1
+      "page": null
     },
     {
       "unit_id": "304",
@@ -286,7 +286,7 @@
       "lease_start": "2026-08-22",
       "lease_end": "2027-08-21",
       "concession_note": "$100 off/mo",
-      "page": 1
+      "page": null
     },
     {
       "unit_id": "305",
@@ -300,7 +300,7 @@
       "lease_start": "2026-03-05",
       "lease_end": "2027-03-04",
       "concession_note": null,
-      "page": 2
+      "page": null
     },
     {
       "unit_id": "306",
@@ -314,7 +314,7 @@
       "lease_start": "2026-08-20",
       "lease_end": "2027-08-19",
       "concession_note": "$100 off/mo",
-      "page": 2
+      "page": null
     },
     {
       "unit_id": "307",
@@ -328,7 +328,7 @@
       "lease_start": "2026-01-19",
       "lease_end": "2027-01-18",
       "concession_note": null,
-      "page": 2
+      "page": null
     },
     {
       "unit_id": "308",
@@ -342,7 +342,7 @@
       "lease_start": "2025-11-28",
       "lease_end": "2026-11-27",
       "concession_note": "$150 off/mo",
-      "page": 2
+      "page": null
     },
     {
       "unit_id": "401",
@@ -356,7 +356,7 @@
       "lease_start": "2026-02-04",
       "lease_end": "2027-02-03",
       "concession_note": null,
-      "page": 2
+      "page": null
     },
     {
       "unit_id": "402",
@@ -370,7 +370,7 @@
       "lease_start": "2025-12-13",
       "lease_end": "2026-12-12",
       "concession_note": null,
-      "page": 2
+      "page": null
     },
     {
       "unit_id": "403",
@@ -384,7 +384,7 @@
       "lease_start": "2026-02-03",
       "lease_end": "2027-02-02",
       "concession_note": null,
-      "page": 2
+      "page": null
     },
     {
       "unit_id": "404",
@@ -398,7 +398,7 @@
       "lease_start": "2025-11-03",
       "lease_end": "2026-11-02",
       "concession_note": null,
-      "page": 2
+      "page": null
     },
     {
       "unit_id": "405",
@@ -412,7 +412,7 @@
       "lease_start": "2026-07-17",
       "lease_end": "2027-07-16",
       "concession_note": null,
-      "page": 2
+      "page": null
     },
     {
       "unit_id": "406",
@@ -426,7 +426,7 @@
       "lease_start": "2025-12-04",
       "lease_end": "2026-12-03",
       "concession_note": null,
-      "page": 2
+      "page": null
     },
     {
       "unit_id": "407",
@@ -440,7 +440,7 @@
       "lease_start": "2026-06-20",
       "lease_end": "2027-06-19",
       "concession_note": null,
-      "page": 2
+      "page": null
     },
     {
       "unit_id": "408",
@@ -454,7 +454,7 @@
       "lease_start": "2026-05-01",
       "lease_end": "2027-04-30",
       "concession_note": "$150 off/mo",
-      "page": 2
+      "page": null
     },
     {
       "unit_id": "501",
@@ -468,7 +468,7 @@
       "lease_start": "2025-12-02",
       "lease_end": "2026-12-01",
       "concession_note": "1 mo free on 12 mo lease",
-      "page": 2
+      "page": null
     },
     {
       "unit_id": "502",
@@ -482,7 +482,7 @@
       "lease_start": "2026-04-28",
       "lease_end": "2027-04-27",
       "concession_note": null,
-      "page": 2
+      "page": null
     },
     {
       "unit_id": "503",
@@ -496,7 +496,7 @@
       "lease_start": "2026-08-22",
       "lease_end": "2027-08-21",
       "concession_note": "1 mo free on 12 mo lease",
-      "page": 2
+      "page": null
     },
     {
       "unit_id": "504",
@@ -510,7 +510,7 @@
       "lease_start": "2026-06-04",
       "lease_end": "2027-06-03",
       "concession_note": null,
-      "page": 2
+      "page": null
     },
     {
       "unit_id": "505",
@@ -524,7 +524,7 @@
       "lease_start": null,
       "lease_end": null,
       "concession_note": null,
-      "page": 2
+      "page": null
     },
     {
       "unit_id": "506",
@@ -538,7 +538,7 @@
       "lease_start": "2026-08-09",
       "lease_end": "2027-08-08",
       "concession_note": "$100 off/mo",
-      "page": 2
+      "page": null
     },
     {
       "unit_id": "507",
@@ -552,7 +552,7 @@
       "lease_start": "2026-06-05",
       "lease_end": "2027-06-04",
       "concession_note": null,
-      "page": 2
+      "page": null
     },
     {
       "unit_id": "508",
@@ -566,7 +566,7 @@
       "lease_start": "2026-04-19",
       "lease_end": "2027-04-18",
       "concession_note": null,
-      "page": 2
+      "page": null
     },
     {
       "unit_id": "601",
@@ -580,7 +580,7 @@
       "lease_start": "2026-05-11",
       "lease_end": "2027-05-10",
       "concession_note": null,
-      "page": 3
+      "page": null
     },
     {
       "unit_id": "602",
@@ -594,7 +594,7 @@
       "lease_start": "2026-02-28",
       "lease_end": "2027-02-27",
       "concession_note": "$100 off/mo",
-      "page": 3
+      "page": null
     },
     {
       "unit_id": "603",
@@ -608,7 +608,7 @@
       "lease_start": "2025-12-26",
       "lease_end": "2026-12-25",
       "concession_note": "$100 off/mo",
-      "page": 3
+      "page": null
     },
     {
       "unit_id": "604",
@@ -622,7 +622,7 @@
       "lease_start": "2026-08-13",
       "lease_end": "2027-08-12",
       "concession_note": "1 mo free on 12 mo lease",
-      "page": 3
+      "page": null
     },
     {
       "unit_id": "605",
@@ -636,7 +636,7 @@
       "lease_start": "2025-12-20",
       "lease_end": "2026-12-19",
       "concession_note": "$150 off/mo",
-      "page": 3
+      "page": null
     },
     {
       "unit_id": "606",
@@ -650,7 +650,7 @@
       "lease_start": "2026-06-26",
       "lease_end": "2027-06-25",
       "concession_note": null,
-      "page": 3
+      "page": null
     },
     {
       "unit_id": "607",
@@ -664,7 +664,7 @@
       "lease_start": "2026-04-28",
       "lease_end": "2027-04-27",
       "concession_note": null,
-      "page": 3
+      "page": null
     },
     {
       "unit_id": "608",
@@ -678,7 +678,7 @@
       "lease_start": "2026-03-23",
       "lease_end": "2027-03-22",
       "concession_note": "1 mo free on 12 mo lease",
-      "page": 3
+      "page": null
     },
     {
       "unit_id": "701",
@@ -692,7 +692,7 @@
       "lease_start": "2026-01-03",
       "lease_end": "2027-01-02",
       "concession_note": null,
-      "page": 3
+      "page": null
     },
     {
       "unit_id": "702",
@@ -706,7 +706,7 @@
       "lease_start": "2026-01-28",
       "lease_end": "2027-01-27",
       "concession_note": null,
-      "page": 3
+      "page": null
     },
     {
       "unit_id": "703",
@@ -720,7 +720,7 @@
       "lease_start": "2025-10-12",
       "lease_end": "2026-10-11",
       "concession_note": null,
-      "page": 3
+      "page": null
     },
     {
       "unit_id": "704",
@@ -734,7 +734,7 @@
       "lease_start": "2026-02-22",
       "lease_end": "2027-02-21",
       "concession_note": null,
-      "page": 3
+      "page": null
     },
     {
       "unit_id": "705",
@@ -748,7 +748,7 @@
       "lease_start": "2026-03-13",
       "lease_end": "2027-03-12",
       "concession_note": null,
-      "page": 3
+      "page": null
     },
     {
       "unit_id": "706",
@@ -762,7 +762,7 @@
       "lease_start": "2026-04-29",
       "lease_end": "2027-04-28",
       "concession_note": null,
-      "page": 3
+      "page": null
     },
     {
       "unit_id": "707",
@@ -776,7 +776,7 @@
       "lease_start": "2026-04-04",
       "lease_end": "2027-04-03",
       "concession_note": "1 mo free on 12 mo lease",
-      "page": 3
+      "page": null
     },
     {
       "unit_id": "708",
@@ -790,7 +790,7 @@
       "lease_start": null,
       "lease_end": null,
       "concession_note": null,
-      "page": 3
+      "page": null
     },
     {
       "unit_id": "801",
@@ -804,7 +804,7 @@
       "lease_start": "2026-02-01",
       "lease_end": "2027-01-31",
       "concession_note": null,
-      "page": 3
+      "page": null
     },
     {
       "unit_id": "802",
@@ -818,7 +818,7 @@
       "lease_start": "2025-10-06",
       "lease_end": "2026-10-05",
       "concession_note": null,
-      "page": 3
+      "page": null
     },
     {
       "unit_id": "803",
@@ -832,7 +832,7 @@
       "lease_start": "2026-08-26",
       "lease_end": "2027-08-25",
       "concession_note": null,
-      "page": 3
+      "page": null
     },
     {
       "unit_id": "804",
@@ -846,7 +846,7 @@
       "lease_start": "2026-02-04",
       "lease_end": "2027-02-03",
       "concession_note": null,
-      "page": 3
+      "page": null
     },
     {
       "unit_id": "805",
@@ -860,7 +860,7 @@
       "lease_start": null,
       "lease_end": null,
       "concession_note": null,
-      "page": 4
+      "page": null
     },
     {
       "unit_id": "806",
@@ -874,7 +874,7 @@
       "lease_start": null,
       "lease_end": null,
       "concession_note": null,
-      "page": 4
+      "page": null
     },
     {
       "unit_id": "807",
@@ -888,7 +888,7 @@
       "lease_start": null,
       "lease_end": null,
       "concession_note": null,
-      "page": 4
+      "page": null
     },
     {
       "unit_id": "808",
@@ -902,7 +902,7 @@
       "lease_start": "2026-08-30",
       "lease_end": "2027-08-29",
       "concession_note": null,
-      "page": 4
+      "page": null
     },
     {
       "unit_id": "901",
@@ -916,7 +916,7 @@
       "lease_start": null,
       "lease_end": null,
       "concession_note": null,
-      "page": 4
+      "page": null
     },
     {
       "unit_id": "902",
@@ -930,7 +930,7 @@
       "lease_start": "2026-05-19",
       "lease_end": "2027-05-18",
       "concession_note": null,
-      "page": 4
+      "page": null
     },
     {
       "unit_id": "903",
@@ -944,7 +944,7 @@
       "lease_start": "2025-10-14",
       "lease_end": "2026-10-13",
       "concession_note": null,
-      "page": 4
+      "page": null
     },
     {
       "unit_id": "904",
@@ -958,7 +958,7 @@
       "lease_start": "2025-10-06",
       "lease_end": "2026-10-05",
       "concession_note": "$100 off/mo",
-      "page": 4
+      "page": null
     },
     {
       "unit_id": "905",
@@ -972,7 +972,7 @@
       "lease_start": "2026-01-22",
       "lease_end": "2027-01-21",
       "concession_note": null,
-      "page": 4
+      "page": null
     },
     {
       "unit_id": "906",
@@ -986,7 +986,7 @@
       "lease_start": "2025-10-09",
       "lease_end": "2026-10-08",
       "concession_note": null,
-      "page": 4
+      "page": null
     },
     {
       "unit_id": "907",
@@ -1000,7 +1000,7 @@
       "lease_start": "2026-06-15",
       "lease_end": "2027-06-14",
       "concession_note": null,
-      "page": 4
+      "page": null
     },
     {
       "unit_id": "908",
@@ -1014,7 +1014,7 @@
       "lease_start": "2026-08-28",
       "lease_end": "2027-08-27",
       "concession_note": "$150 off/mo",
-      "page": 4
+      "page": null
     },
     {
       "unit_id": "1001",
@@ -1028,7 +1028,7 @@
       "lease_start": "2026-05-14",
       "lease_end": "2027-05-13",
       "concession_note": "$100 off/mo",
-      "page": 4
+      "page": null
     },
     {
       "unit_id": "1002",
@@ -1042,7 +1042,7 @@
       "lease_start": "2025-10-24",
       "lease_end": "2026-10-23",
       "concession_note": null,
-      "page": 4
+      "page": null
     },
     {
       "unit_id": "1003",
@@ -1056,7 +1056,7 @@
       "lease_start": "2025-10-30",
       "lease_end": "2026-10-29",
       "concession_note": null,
-      "page": 4
+      "page": null
     },
     {
       "unit_id": "1004",
@@ -1070,7 +1070,7 @@
       "lease_start": "2026-06-23",
       "lease_end": "2027-06-22",
       "concession_note": null,
-      "page": 4
+      "page": null
     },
     {
       "unit_id": "1005",
@@ -1084,7 +1084,7 @@
       "lease_start": "2026-08-17",
       "lease_end": "2027-08-16",
       "concession_note": null,
-      "page": 4
+      "page": null
     },
     {
       "unit_id": "1006",
@@ -1098,7 +1098,7 @@
       "lease_start": "2025-11-04",
       "lease_end": "2026-11-03",
       "concession_note": null,
-      "page": 4
+      "page": null
     },
     {
       "unit_id": "1007",
@@ -1112,7 +1112,7 @@
       "lease_start": "2026-07-13",
       "lease_end": "2027-07-12",
       "concession_note": null,
-      "page": 4
+      "page": null
     },
     {
       "unit_id": "1008",
@@ -1126,7 +1126,7 @@
       "lease_start": null,
       "lease_end": null,
       "concession_note": null,
-      "page": 4
+      "page": null
     },
     {
       "unit_id": "1101",
@@ -1140,7 +1140,7 @@
       "lease_start": "2025-12-14",
       "lease_end": "2026-12-13",
       "concession_note": "$100 off/mo",
-      "page": 5
+      "page": null
     },
     {
       "unit_id": "1102",
@@ -1154,7 +1154,7 @@
       "lease_start": "2026-05-20",
       "lease_end": "2027-05-19",
       "concession_note": null,
-      "page": 5
+      "page": null
     },
     {
       "unit_id": "1103",
@@ -1168,7 +1168,7 @@
       "lease_start": "2025-10-21",
       "lease_end": "2026-10-20",
       "concession_note": null,
-      "page": 5
+      "page": null
     },
     {
       "unit_id": "1104",
@@ -1182,7 +1182,7 @@
       "lease_start": "2026-05-03",
       "lease_end": "2027-05-02",
       "concession_note": null,
-      "page": 5
+      "page": null
     }
   ],
   "rr_stated_totals": {
