@@ -55,9 +55,44 @@ def test_as_of_argument_is_used(capsys: pytest.CaptureFixture[str]) -> None:
     assert "as of 2030-01-01" in out and "RR_EXPIRED_LEASE" in out
 
 
-def test_export_is_not_available_until_m5(capsys: pytest.CaptureFixture[str]) -> None:
-    assert main(["run", str(DATA / "deal_001"), "--export", "x.xlsx"]) == 2
-    assert "M5" in capsys.readouterr().err
+def test_export_writes_a_workbook_for_a_clean_deal(
+    isolated: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    target = isolated / "x.xlsx"
+    assert main(["run", str(DATA / "deal_001"), "--export", str(target)]) == 0
+    assert target.exists() and "Workbook:" in capsys.readouterr().out
+
+
+def test_export_is_refused_while_blocks_are_open(
+    isolated: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    target = isolated / "x.xlsx"
+    assert main(["run", str(DATA / "deal_003"), "--export", str(target)]) == 5
+    assert not target.exists() and "export refused: 1 open block" in capsys.readouterr().err
+
+
+def test_allow_open_blocks_exports_anyway(
+    isolated: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    target = isolated / "out" / "deal_003.xlsx"
+    code = main(["run", str(DATA / "deal_003"), "--export", str(target), "--allow-open-blocks"])
+    assert code == 0 and target.exists()
+    assert "with 1 open block finding(s)" in capsys.readouterr().out
+
+
+def test_export_command_builds_the_workbook_from_a_saved_package(
+    isolated: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["run", str(DATA / "deal_001")]) == 0
+    package = isolated / "out" / "deal_001" / "package.json"
+    target = isolated / "from_package.xlsx"
+    assert main(["export", str(package), "--out", str(target)]) == 0
+    assert target.exists()
+
+
+def test_export_command_rejects_a_missing_package(isolated: Path, capsys) -> None:
+    assert main(["export", str(isolated / "nope.json"), "--out", str(isolated / "x.xlsx")]) == 2
+    assert "cannot read package" in capsys.readouterr().err
 
 
 def test_unrecorded_llm_call_exits_4(capsys: pytest.CaptureFixture[str]) -> None:

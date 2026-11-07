@@ -12,6 +12,7 @@ from pathlib import Path
 
 from cre_screen.config import AppConfig, load_config
 from cre_screen.errors import BudgetExceededError, CacheMissError, CreScreenError
+from cre_screen.export.excel_writer import write_workbook
 from cre_screen.extract.rent_roll import build_rent_roll
 from cre_screen.extract.t12 import build_t12
 from cre_screen.ingest.parse import parse_date
@@ -22,10 +23,11 @@ from cre_screen.mapping.header_mapper import map_headers
 from cre_screen.pipeline import find_input, read_rr_table, run_deal, sample_rows
 from cre_screen.reconcile.checks import rr_footing, t12_footing
 from cre_screen.reconcile.context import CheckContext
-from cre_screen.runtime import LEARNED, make_llm, with_overrides
+from cre_screen.runtime import LEARNED, REPO_ROOT, make_llm, with_overrides
+from cre_screen.schemas.deal import DealPackage
 from cre_screen.schemas.rent_roll import RentRoll
 
-EXIT_OK, EXIT_BAD_INPUT, EXIT_BUDGET, EXIT_CACHE_MISS = 0, 2, 3, 4
+EXIT_OK, EXIT_BAD_INPUT, EXIT_BUDGET, EXIT_CACHE_MISS, EXIT_OPEN_BLOCKS = 0, 2, 3, 4, 5
 CACHE_DIR = Path("out") / "cache" / "extract"
 SEVERITY_ORDER = ("block", "warn", "info")
 
@@ -135,8 +137,6 @@ def cmd_extract_t12(args: argparse.Namespace) -> int:
 
 
 def cmd_run(args: argparse.Namespace) -> int:
-    if args.export is not None:
-        raise CreScreenError("--export arrives with the Excel export milestone (M5)")
     cfg: AppConfig = with_overrides(
         load_config(),
         model=args.model,
@@ -171,7 +171,37 @@ def cmd_run(args: argparse.Namespace) -> int:
     print(f"Final state: {pkg.final_state}")
     print(f"Package: out/{pkg.deal_id}/package.json")
     print(f"Cost this run: {_money(pkg.cost_usd)} (cache mode: {cache.mode})")
+    if args.export is None:
+        return EXIT_OK
+    return _export(
+        pkg, Path(args.export), args.allow_open_blocks, (deal_dir / "truth.json").exists()
+    )
+
+
+def _export(pkg: DealPackage, path: Path, allow_open_blocks: bool, synthetic: bool) -> int:
+    """Write the workbook unless blocks are open (exit 5), unless explicitly allowed."""
+    blocks = pkg.open_blocks()
+    if blocks and not allow_open_blocks:
+        print(
+            f"error: export refused: {len(blocks)} open block finding(s); clear them in review "
+            "or pass --allow-open-blocks",
+            file=sys.stderr,
+        )
+        return EXIT_OPEN_BLOCKS
+    write_workbook(pkg, path, synthetic=synthetic)
+    note = f" (with {len(blocks)} open block finding(s))" if blocks else ""
+    print(f"Workbook: {path.as_posix()}{note}")
     return EXIT_OK
+
+
+def cmd_export(args: argparse.Namespace) -> int:
+    package_path: Path = args.package
+    try:
+        pkg = DealPackage.model_validate_json(package_path.read_bytes())
+    except (OSError, ValueError) as exc:
+        raise CreScreenError(f"cannot read package {package_path.as_posix()}: {exc}") from exc
+    synthetic = (REPO_ROOT / "data" / "synthetic" / pkg.deal_id / "truth.json").exists()
+    return _export(pkg, args.out, args.allow_open_blocks, synthetic)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -191,11 +221,16 @@ def build_parser() -> argparse.ArgumentParser:
     )
     run.add_argument("deal_dir", type=Path)
     run.add_argument("--as-of", dest="as_of", default=None, help="YYYY-MM-DD")
-    run.add_argument("--export", default=None, help="workbook path (arrives in M5)")
+    run.add_argument("--export", default=None, help="write the workbook here")
     run.add_argument("--allow-open-blocks", action="store_true")
     run.add_argument("--model", default=None)
     run.add_argument("--run-cap", dest="run_cap", default=None, help="USD, e.g. 1.00")
     run.set_defaults(func=cmd_run)
+    export = sub.add_parser("export", help="write the workbook from a saved package.json")
+    export.add_argument("package", type=Path)
+    export.add_argument("--out", type=Path, required=True)
+    export.add_argument("--allow-open-blocks", action="store_true")
+    export.set_defaults(func=cmd_export)
     return parser
 
 
