@@ -165,12 +165,27 @@ def test_baseline_records_the_numbers_the_regression_test_compares() -> None:
 # ---------- the CLI ----------
 
 
-@pytest.mark.parametrize("split", ["heldout", "all"])
-def test_held_out_and_combined_splits_are_not_available_yet(
-    split: str, capsys: pytest.CaptureFixture[str]
+def test_the_combined_split_is_not_available(capsys: pytest.CaptureFixture[str]) -> None:
+    assert run_eval.main(["--split", "all"]) == 2
+    assert "not available" in capsys.readouterr().err
+
+
+def test_the_held_out_split_requires_the_final_flag(capsys: pytest.CaptureFixture[str]) -> None:
+    assert run_eval.main(["--split", "heldout"]) == 2
+    assert "requires --final" in capsys.readouterr().err
+
+
+def test_a_second_final_run_is_refused_unless_allowed(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    assert run_eval.main(["--split", split]) == 2
-    assert "not available yet" in capsys.readouterr().err
+    (tmp_path / "FINAL_2026-11-08_abc1234.md").write_text("earlier run", encoding="utf-8")
+    assert run_eval.main(["--split", "heldout", "--final", "--out", str(tmp_path)]) == 2
+    err = capsys.readouterr().err
+    assert "already exists" in err and "--allow-second-final" in err
+
+
+def test_the_held_out_numbers_are_spelled_out_not_globbed() -> None:
+    assert list(run_eval.HELDOUT_DEAL_NUMBERS) == [15, 16, 17, 18, 19, 20]
 
 
 def test_final_flag_is_refused_on_dev(capsys: pytest.CaptureFixture[str]) -> None:

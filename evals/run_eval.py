@@ -1,7 +1,8 @@
 """CLI: ``python -m evals.run_eval --split dev``.
 
-Only the dev split is available. Held-out deals (015 to 020) are never listed, opened or run by
-this module: the dev deal numbers are spelled out, not discovered by globbing.
+The dev deal numbers (1 to 14) and the held-out numbers (15 to 20) are spelled out, never
+discovered by globbing. The held-out split runs only as ``--split heldout --final`` (SPEC 11.7),
+writes ``FINAL_<date>_<sha>`` reports, and refuses to run again once one exists.
 """
 
 from __future__ import annotations
@@ -34,6 +35,7 @@ from evals.scoring import failed_score, score_deal
 logger = logging.getLogger(__name__)
 
 DEV_DEAL_NUMBERS = range(1, 15)
+HELDOUT_DEAL_NUMBERS = range(15, 21)
 DATA_DIR = REPO_ROOT / "data" / "synthetic"
 REAL_DIR = REPO_ROOT / "data" / "real"
 REPORTS_DIR = REPO_ROOT / "evals" / "reports"
@@ -50,8 +52,11 @@ def evaluate(
     out_dir: Path | None = None,
     data_dir: Path = DATA_DIR,
     notes: list[str] | None = None,
+    numbers: range = DEV_DEAL_NUMBERS,
 ) -> tuple[list[DealScore], Decimal]:
-    """Run the pipeline on every dev deal and score it. Returns (scores, total cost).
+    """Run the pipeline on every deal in ``numbers`` (dev by default) and score it.
+
+    Returns (scores, total cost).
 
     When a document yields no as-of date (a scan whose title lines the model did not transcribe)
     the real CLI asks the operator for ``--as-of``. The harness plays the operator: it reruns the
@@ -60,7 +65,7 @@ def evaluate(
     llm, tracker, _cache = make_llm(cfg)
     out = out_dir or REPO_ROOT / "out"
     scores: list[DealScore] = []
-    for number in DEV_DEAL_NUMBERS:
+    for number in numbers:
         deal_dir = data_dir / f"deal_{number:03d}"
         truth = DealTruth.model_validate_json((deal_dir / "truth.json").read_bytes())
         spent_before = tracker.run_total()
@@ -197,16 +202,100 @@ def _run_real(cfg: AppConfig, args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
-def main(argv: list[str] | None = None) -> int:
-    logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s: %(message)s")
-    args = build_parser().parse_args(argv)
-    if args.split not in ("dev", "real"):
+def print_table(scores: list[DealScore]) -> None:
+    """Raw per-deal numbers, one row per deal, then the totals."""
+    print(
+        f"{'deal':<10}{'units':>11}{'numeric':>13}{'planted':>9}{'caught':>8}{'fp':>4}"
+        f"{'phantoms':>10}{'cost':>10}  provenance"
+    )
+    for s in scores:
+        mix = ", ".join(f"{k}={v}" for k, v in sorted(s.provenance_mix.items()))
         print(
-            f"error: --split {args.split} is not available yet (the held-out run belongs to the "
-            "final milestone)",
+            f"{s.deal_id:<10}{f'{s.units_found}/{s.units_in_doc}':>11}"
+            f"{f'{s.numeric_fields_correct}/{s.numeric_fields_total}':>13}{s.planted:>9}"
+            f"{s.caught:>8}{s.false_positives:>4}{s.phantom_units:>10}"
+            f"{f'${s.cost_usd:.4f}':>10}  {mix}"
+        )
+
+
+def _run_heldout(args: argparse.Namespace) -> int:
+    """The one-shot final run on the locked held-out deals (SPEC 11.7)."""
+    if not args.final:
+        print("error: --split heldout requires --final", file=sys.stderr)
+        return EXIT_BAD_INPUT
+    earlier = sorted(args.out.glob("FINAL_*.md"))
+    if earlier and not args.allow_second_final:
+        print(
+            f"error: a final run already exists ({earlier[0].name}); "
+            "pass --allow-second-final to run again",
             file=sys.stderr,
         )
         return EXIT_BAD_INPUT
+    cfg = with_overrides(
+        load_config(), cache_mode=args.cache_mode, model=args.model, run_cap=args.run_cap
+    )
+    notes: list[str] = []
+    try:
+        scores, cost = evaluate(cfg, notes=notes, numbers=HELDOUT_DEAL_NUMBERS)
+    except CacheMissError as exc:
+        print(
+            f"error: {exc}"
+            + chr(10)
+            + "record the missing entries first (CRE_LLM_CACHE_MODE=record)",
+            file=sys.stderr,
+        )
+        return EXIT_CACHE_MISS
+    except BudgetExceededError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return EXIT_BUDGET
+    except CreScreenError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return EXIT_BAD_INPUT
+
+    sha, today = _git_sha(), f"{datetime.now(UTC):%Y-%m-%d}"
+    meta = {
+        "split": "heldout",
+        "final": "true",
+        "date_utc": today,
+        "git_sha": sha,
+        "cache_mode": cfg.models.cache.mode,
+        "model": cfg.models.default_model,
+        "cost_usd": str(cost),
+    }
+    if earlier:
+        meta["second_final"] = f"a final run already existed ({earlier[0].name})"
+    if notes:
+        meta["as_of_supplied_by_harness"] = "; ".join(notes)
+    write_reports(scores, args.out, f"{today}_{sha}_heldout", meta)
+    _json, md_path = write_reports(scores, args.out, f"FINAL_{today}_{sha}", meta)
+    overall = aggregate(scores)["overall"]
+    print(f"heldout (final): {overall['deals']} deals, cost ${cost}")
+    print_table(scores)
+    print(
+        f"caught {overall['caught']}/{overall['planted']}, false positives "
+        f"{overall['false_positives']}, clean-control findings {overall['clean_control_findings']}"
+    )
+    print(
+        f"numeric accuracy {overall['numeric_accuracy']}, unit recall {overall['unit_recall']}, "
+        f"phantoms {overall['phantom_units']}, COA $ accuracy {overall['coa_accuracy']}"
+    )
+    for note in notes:
+        print(f"note: {note}")
+    for s in scores:
+        for miss in s.misses:
+            print(f"  miss {s.deal_id}: {miss}")
+    print(f"report: {md_path.as_posix()}")
+    return EXIT_OK
+
+
+def main(argv: list[str] | None = None) -> int:
+    logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s: %(message)s")
+    args = build_parser().parse_args(argv)
+    if args.split == "all":
+        print("error: --split all is not available; held-out runs on its own", file=sys.stderr)
+        return EXIT_BAD_INPUT
+    if args.split == "heldout":
+        return _run_heldout(args)
     if args.final:
         print("error: --final applies to the held-out split only", file=sys.stderr)
         return EXIT_BAD_INPUT
