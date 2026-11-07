@@ -146,3 +146,16 @@ def test_only_the_first_three_sample_rows_reach_the_prompt() -> None:
     map_headers(headers, rows, CFG, fake)
     text = fake.calls[0].user_content[0]["text"]
     assert "103" not in text and "102" in text
+
+
+def test_without_permission_to_ask_the_model_unrecognized_headers_fail_without_a_call() -> None:
+    llm = FakeLLMClient()
+    with pytest.raises(HeaderMapError, match="not recognized"):
+        map_headers(["Uni", "Tenant", "Lease"], [], CFG, llm, allow_llm=False)
+    assert llm.calls_for("header_map") == []
+
+
+def test_without_permission_to_ask_the_model_recognized_headers_still_map() -> None:
+    llm = FakeLLMClient()
+    header_map, warnings = map_headers(GOOD, [], CFG, llm, allow_llm=False)
+    assert header_map.source == "synonym_table" and warnings == []

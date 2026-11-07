@@ -14,9 +14,18 @@ _NBSP = chr(0xA0)  # non-breaking space
 _DASHES = {"-", chr(0x2013), chr(0x2014)}  # hyphen, en dash, em dash
 _MINUS = chr(0x2212)  # Unicode minus sign
 _NUMBER = re.compile(r"^(\d+(?:\.\d+)?|\.\d+)$")
-_BLANKS = {"", "n/a"}
+_BLANKS = {"", "n/a", "mtm", "m-t-m", "m2m", "month to month", "month-to-month"}
 
-_DATE_FORMATS = ("%m/%d/%Y", "%m/%d/%y", "%Y-%m-%d", "%d-%b-%Y")
+_DATE_FORMATS = (
+    "%m/%d/%Y",
+    "%m/%d/%y",
+    "%Y-%m-%d",
+    "%d-%b-%Y",
+    "%B %d, %Y",
+    "%b %d, %Y",
+    "%B %d %Y",
+    "%b %d %Y",
+)
 _MONTH_FORMATS = ("%b-%y", "%b %Y", "%m/%Y")
 
 
@@ -94,7 +103,7 @@ def parse_date(text: str | date | datetime, *, end_of_month: bool = False) -> da
     if isinstance(text, date):
         return text
     cleaned = _clean(text)
-    if cleaned.lower() in _BLANKS:
+    if cleaned.lower() in _BLANKS or cleaned in _DASHES:
         return None
     for fmt in _DATE_FORMATS:
         try:

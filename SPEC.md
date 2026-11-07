@@ -15,7 +15,7 @@ The project's claim is not "AI extracts rent rolls." Commercial tools already do
 ### 1.1 v1 scope
 
 - Rent roll: text-layer PDF, scanned PDF (vision fallback), Excel (.xlsx).
-- T-12: text-layer PDF, Excel (.xlsx). Scanned T-12 is out of scope for v1.
+- T-12: text-layer PDF, Excel (.xlsx). A text-layer T-12 that the table reader cannot read falls back to the vision reader (Section 7.9); a T-12 that is a scan from the start is read the same way.
 - Broker pro forma: typed by hand into `proforma.yaml` per deal.
 - 15 deterministic checks (Section 8).
 - Excel export with 7 tabs (Section 9).
@@ -167,6 +167,7 @@ cre-screen/
         coa_map.md
         concession.md
         vision_page.md
+        vision_t12.md
     extract/
       __init__.py
       rent_roll.py              # RawTable + HeaderMap -> RentRoll
@@ -410,7 +411,7 @@ fields:
   concession_note: ["Concession", "Concessions", "Notes", "Comments", "Specials", "Remarks"]
 
 status_synonyms:
-  occupied: ["occupied", "occ", "o", "current", "leased", "occupied-nr"]
+  occupied: ["occupied", "occ", "o", "current", "leased", "occupied-nr", "active"]
   vacant: ["vacant", "vac", "v", "vacant-unrented", "vacant unrented"]
   notice: ["notice", "ntv", "on notice", "occupied-ntv", "notice to vacate"]
   model: ["model", "model unit"]
@@ -1330,6 +1331,16 @@ def run_deal(
 
 Steps: detect formats, extract raw tables, map headers, build rent roll, extract and map T-12, load pro forma, apply overrides, run the gate (Section 8), return `DealPackage`. Writes `out/<deal_id>/package.json`. Never writes inside `data/`.
 
+### 7.9 Reading real-world files (`read_inputs.py`, `ingest/routing.py`, `ingest/unwrap.py`)
+
+- **Routing.** For a text-layer PDF, `route_pdf` decides which pages (or which horizontal slice of a shared page) hold the unit-level rent roll and the T-12 grid. It routes when one page holds both tables, when both tables are in one file, or when a file of more than 4 pages has pages that are plainly something else (pro forma, photos, highlights). A plain single-table file is read whole, exactly as before. Pages whose title starts with a pro forma heading are never taken for the rent roll. The same file may be supplied in both slots; a rent roll file that also holds the T-12 serves as the T-12 when no `t12` file exists.
+- **Reader order.** Rent roll: (1) text layer, synonym-table headers only; (2) text layer with wrapped cells rejoined; (3) text layer with the model reading the headers (7.2); (4) rejoined text layer with the model reading the headers; (5) vision on the routed pages (7.6). T-12: text layer, rejoined text layer, vision with `vision_t12.md`. A step that raises a parse, header-map, T-12 or vision error, or yields no unit rows (no 12 month columns or no line items for a T-12), hands over to the next. Each failed step adds a note to `extraction_warnings`. Vision is allowed only on routed pages or on a file of at most 4 pages, so a brochure is never sent page by page.
+- **Wrapped cells.** `unwrap_words` merges stacks of fragments that sit closer than one text height: `Uni`/`t` becomes `Unit`, `04/03/2`/`6` becomes `04/03/26`, `$110,95`/`6` becomes `$110,956`. Fragments join without a space inside a number, date or split word and with a space otherwise. The merged word keeps a box covering every fragment.
+- **Headerless label column.** If the first printed T-12 header is a month and the lines below carry text to its left, that column is the label column and gets the header `Line Item`. Month names without a year (`Jan` .. `Dec`) take the year from the title text above the table; with no year found the T-12 is rejected.
+- **Notes under a T-12.** A row is a line item only if at least as many of its cells are figures as are words.
+- **Cache.** The extraction cache key includes `READER_VERSION`; bump it whenever a table reader changes what it produces.
+- **Pre-flight (UI).** Before Run, `ingest/preflight.py` checks the files and shows plain-English banners. A file is blocked only when it is damaged, blank, mirrored, or when a required table is absent: a rent roll slot with no unit-level rows anywhere (a P&L, a unit-mix summary), or a T-12 slot with no income and expense table. Routed pages are announced as information. The same file in both slots is not an error.
+
 ---
 
 ## 8. Reconciliation gate (`reconcile/`)
@@ -1979,6 +1990,17 @@ For each row, give each cell's text exactly as printed, including $ signs, comma
 Use an empty string for a blank cell. Do not compute, correct or total anything.
 Mark rows that are subtotals, repeated headers or footnotes with the matching row_kind.
 Also return every title line printed above the table (property name, report title, the "As of" date) as its own row with row_kind other, in reading order, with the line's exact text as the value of its first cell.
+```
+
+**`vision_t12.md`** (used only when a text-layer T-12 cannot be read):
+
+```text
+This image is one page of a trailing 12 month income and expense statement (a T-12). Transcribe it.
+Return the header texts exactly as printed, left to right. If the column of line item names has no printed header, give it the header "Line Item". The month columns and a Total column follow.
+For each row, give each cell's text exactly as printed, including $ signs, commas and parentheses.
+Use an empty string for a blank cell. Do not compute, correct or total anything.
+Mark every line item row with row_kind unit. Mark total rows such as Total Income, Total Expenses and NOI with row_kind subtotal. Mark section titles and notes with row_kind footnote.
+Also return every title line printed above the table (property name, report title, the period) as its own row with row_kind other, in reading order, with the line's exact text as the value of its first cell.
 ```
 
 ---

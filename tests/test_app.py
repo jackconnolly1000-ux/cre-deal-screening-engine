@@ -391,32 +391,28 @@ def test_a_damaged_pdf_shows_a_plain_english_banner_with_steps(
     assert not at.metric, "the pipeline did not run"
 
 
-def test_a_brochure_banner_names_the_pages_to_split(
+def test_a_brochure_is_accepted_and_the_routed_pages_are_announced(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from tests.test_preflight import ROLL_PAGE, T12_PAGE, make_pdf
+    from tests.pdf_makers import filler, pages_pdf, rent_roll_page, t12_page
 
-    pages = [["OFFERING MEMORANDUM"], ["INVESTMENT HIGHLIGHTS"], ["PROPERTY PHOTOS"]]
-    brochure = make_pdf(tmp_path / "package.pdf", [*pages, ["PRO FORMA"], ROLL_PAGE, T12_PAGE])
-    t12 = make_pdf(tmp_path / "t12.pdf", [T12_PAGE])
-    at = stage_deal(tmp_path, monkeypatch, brochure, t12)
-    assert any("whole brochure" in e.value and "page 5" in e.value for e in at.error)
-    assert not at.metric
+    pages = [filler("INVESTMENT HIGHLIGHTS"), filler("PROPERTY PHOTOS"), filler("PRO FORMA")]
+    brochure = pages_pdf(tmp_path / "package.pdf", [*pages, rent_roll_page(), t12_page()])
+    at = stage_deal(tmp_path, monkeypatch, brochure, brochure)
+    assert any("rent roll on page(s) 4" in i.value for i in at.info)
+    assert not any("whole brochure" in e.value for e in at.error)
 
 
 def test_a_wrong_document_banner_appears_for_a_profit_and_loss_rent_roll(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from tests.test_preflight import make_pdf
+    from tests.pdf_makers import pages_pdf, t12_page
 
-    pnl = make_pdf(
-        tmp_path / "pnl.pdf",
-        [["Profit & Loss Statement 2024", "Total Income 1600", "Expenses 5"]],
-    )
+    pnl = pages_pdf(tmp_path / "pnl.pdf", [t12_page(heading="Profit & Loss Statement 2024")])
     at = stage_deal(tmp_path, monkeypatch, pnl, pnl)
-    messages = " ".join(e.value for e in at.error)
-    assert "profit and loss statement, not a rent roll" in messages
-    assert "same document" in messages and not at.metric
+    (banner,) = at.error  # only the rent roll slot is wrong; the same file is fine as a T-12
+    assert "profit and loss statement, not a rent roll" in banner.value
+    assert "rent_roll.pdf" in banner.value and not at.metric
 
 
 def test_a_healthy_deal_still_runs_after_the_preflight() -> None:

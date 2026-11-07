@@ -9,6 +9,13 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 
 from cre_screen.ingest.preflight import diagnose_pdf, preflight
+from tests.pdf_makers import (
+    both_on_one_page,
+    filler,
+    pages_pdf,
+    rent_roll_page,
+    t12_page,
+)
 
 DATA = Path(__file__).resolve().parents[1] / "data" / "synthetic"
 
@@ -80,8 +87,8 @@ def test_the_dev_deals_raise_no_diagnostics(deal: str) -> None:
 
 
 def test_a_clean_rent_roll_and_t12_pass(tmp_path: Path) -> None:
-    rr = make_pdf(tmp_path / "rent_roll.pdf", [ROLL_PAGE])
-    t12 = make_pdf(tmp_path / "t12.pdf", [T12_PAGE])
+    rr = pages_pdf(tmp_path / "rent_roll.pdf", [rent_roll_page()])
+    t12 = pages_pdf(tmp_path / "t12.pdf", [t12_page()])
     assert preflight(rr, t12) == []
 
 
@@ -112,20 +119,43 @@ def test_a_blank_page_is_reported(tmp_path: Path) -> None:
 # ---------- brochures and wrong documents ----------
 
 
-def test_a_whole_brochure_is_reported_with_the_pages_to_split(tmp_path: Path) -> None:
-    pages = [
-        ["INVESTMENT OFFERING MEMORANDUM"],
-        ["INVESTMENT HIGHLIGHTS"],
-        ["PROPERTY PHOTOS"],
-        ["PRO FORMA INCOME STATEMENT"],
-        ROLL_PAGE,
-        T12_PAGE,
+def om_pages() -> list:
+    return [
+        filler("INVESTMENT OFFERING MEMORANDUM"),
+        filler("INVESTMENT HIGHLIGHTS"),
+        filler("PROPERTY PHOTOS"),
+        filler("PRO FORMA INCOME STATEMENT"),
+        rent_roll_page(),
+        t12_page(),
     ]
-    (found,) = diagnose_pdf(make_pdf(tmp_path / "package.pdf", pages), "rent_roll")
-    assert found.code == "multi_page_package"
-    assert "rent roll: page 5" in found.detail and "T-12: page 6" in found.detail
-    assert any("rent_roll.pdf" in step for step in found.steps)
-    assert any("t12.pdf" in step for step in found.steps)
+
+
+def test_a_whole_brochure_is_accepted_and_the_routed_pages_are_reported(tmp_path: Path) -> None:
+    brochure = pages_pdf(tmp_path / "package.pdf", om_pages())
+    (note,) = diagnose_pdf(brochure, "rent_roll")
+    assert note.code == "auto_routed" and note.severity == "info" and not note.steps
+    assert "rent roll on page(s) 5" in note.detail and "T-12 on page(s) 6" in note.detail
+    assert preflight(brochure, None) == [note]
+
+
+def test_a_brochure_in_both_slots_raises_no_error(tmp_path: Path) -> None:
+    brochure = pages_pdf(tmp_path / "package.pdf", om_pages())
+    found = preflight(brochure, brochure)
+    assert found and all(d.severity == "info" for d in found)
+
+
+def test_a_brochure_without_a_rent_roll_is_blocked(tmp_path: Path) -> None:
+    pages = [filler("PROPERTY PHOTOS"), filler("PRO FORMA"), t12_page()] * 2
+    (found,) = diagnose_pdf(pages_pdf(tmp_path / "package.pdf", pages), "rent_roll")
+    assert found.code == "no_unit_rows" and "any of its 6 pages" in found.detail
+
+
+def test_a_page_with_both_tables_is_accepted_in_either_slot(tmp_path: Path) -> None:
+    flyer = pages_pdf(tmp_path / "flyer.pdf", [both_on_one_page()])
+    assert preflight(flyer, flyer) == preflight(flyer, None) or all(
+        d.severity == "info" for d in preflight(flyer, flyer)
+    )
+    assert not [d for d in preflight(flyer, flyer) if d.severity == "error"]
 
 
 def test_a_profit_and_loss_in_the_rent_roll_slot_is_reported(tmp_path: Path) -> None:
@@ -160,11 +190,19 @@ def test_a_rent_roll_in_the_t12_slot_is_reported(tmp_path: Path) -> None:
     assert codes(diagnose_pdf(roll, "t12")) == ["not_a_t12"]
 
 
-def test_the_same_document_in_both_slots_is_reported(tmp_path: Path) -> None:
-    pnl = ["Profit & Loss Statement 2024", "Total Income 1600", "Expenses 5"]
-    rr = make_pdf(tmp_path / "rent_roll.pdf", [pnl])
-    t12 = make_pdf(tmp_path / "t12.pdf", [pnl])
-    assert "same_document" in codes(preflight(rr, t12))
+def test_the_same_file_in_both_slots_is_not_blocked_when_both_tables_exist(tmp_path: Path) -> None:
+    flyer = pages_pdf(tmp_path / "flyer.pdf", [both_on_one_page()])
+    copy = tmp_path / "t12.pdf"
+    copy.write_bytes(flyer.read_bytes())
+    assert not [d for d in preflight(flyer, copy) if d.severity == "error"]
+
+
+def test_a_profit_and_loss_in_both_slots_blocks_only_the_missing_rent_roll(tmp_path: Path) -> None:
+    pnl = pages_pdf(tmp_path / "t12.pdf", [t12_page(heading="Profit & Loss Statement 2024")])
+    copy = tmp_path / "rent_roll.pdf"
+    copy.write_bytes(pnl.read_bytes())
+    found = preflight(copy, pnl)
+    assert [(d.code, d.file) for d in found] == [("not_a_rent_roll", "rent_roll.pdf")]
 
 
 def test_mirrored_text_is_reported(tmp_path: Path) -> None:

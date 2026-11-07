@@ -130,11 +130,19 @@ def map_headers(
     sample_rows: list[dict[str, str]],
     cfg: RRHeadersConfig,
     llm: LLMClient,
+    *,
+    allow_llm: bool = True,
 ) -> tuple[HeaderMap, list[str]]:
-    """Return the HeaderMap and any warnings. Raises HeaderMapError if nothing valid results."""
+    """Return the HeaderMap and any warnings. Raises HeaderMapError if nothing valid results.
+
+    With ``allow_llm=False`` only the synonym table is tried, so a caller with other readers to
+    try can reject a garbled header row without spending a call.
+    """
     synonym_map = _from_synonyms(headers, cfg)
     if synonym_map is not None:
         return synonym_map, []
+    if not allow_llm:
+        raise HeaderMapError("the table headers are not recognized by the synonym table")
 
     warnings: list[str] = []
     problem: str | None = None

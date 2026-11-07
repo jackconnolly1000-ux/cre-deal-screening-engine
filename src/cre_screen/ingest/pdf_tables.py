@@ -19,7 +19,8 @@ from typing import Any
 import pdfplumber
 
 from cre_screen.config import CoaConfig, RRHeadersConfig
-from cre_screen.ingest.raw import RawCell, RawRow, RawTable, RowKind
+from cre_screen.ingest.raw import RawCell, RawRow, RawTable, Region, RowKind
+from cre_screen.ingest.unwrap import unwrap_words
 from cre_screen.mapping.header_mapper import match_headers, normalize_header
 
 logger = logging.getLogger(__name__)
@@ -31,7 +32,10 @@ MIN_T12_MONTH_HEADERS = 6
 UNIT_ID_LIKE = re.compile(r"^[A-Za-z]{0,3}[-#]?\d[\w-]{0,7}$")
 SUBTOTAL_LIKE = re.compile(r"total|subtotal", re.IGNORECASE)
 FOOTNOTE_LIKE = re.compile(r"^(\*|\d+\))")
-MONTH_FORMATS = ("%b-%y", "%b %Y", "%m/%Y")
+MONTH_FORMATS = ("%b-%y", "%b %Y", "%m/%Y", "%b", "%B")
+LABEL_HEADER = "Line Item"  # stands in for a label column with no printed header
+LABEL_LOOKAHEAD = 15
+MIN_LABEL_LINES = 2
 DASHES = ("-", chr(0x2013), chr(0x2014))
 MINUS = chr(0x2212)
 NUMERIC_CELL = re.compile(rf"^[(\-{MINUS}]?\$?[\d,]*\.?\d+\)?-?$")
@@ -79,6 +83,18 @@ def _find_header_line(lines: list[list[Word]], cfg: RRHeadersConfig) -> tuple[in
     return None if best is None else (best[1], best[2])
 
 
+def find_rr_header(lines: list[list[Word]], cfg: RRHeadersConfig) -> tuple[int, Phrases] | None:
+    return _find_header_line(lines, cfg)
+
+
+def find_t12_header(lines: list[list[Word]]) -> tuple[int, Phrases] | None:
+    return _find_t12_header(lines)
+
+
+def group_lines(words: list[Word]) -> list[list[Word]]:
+    return _group_lines(words)
+
+
 def is_month_label(text: str) -> bool:
     for fmt in MONTH_FORMATS:
         try:
@@ -89,6 +105,25 @@ def is_month_label(text: str) -> bool:
     return False
 
 
+def _with_label_column(lines: list[list[Word]], index: int, phrases: Phrases) -> Phrases:
+    """Add a stand-in header when the line-item column has no header text.
+
+    If the first printed header is a month and the lines below it carry text to its left, that
+    text is the label column. Its header is inferred from the content, not from a printed word.
+    """
+    if not phrases or not is_month_label(phrases[0][0]):
+        return phrases
+    first_x0 = phrases[0][1]
+    left: list[float] = []
+    for line in lines[index + 1 : index + 1 + LABEL_LOOKAHEAD]:
+        words = [w for w in line if w["x1"] < first_x0 - 1 and any(c.isalpha() for c in w["text"])]
+        if words:
+            left.append(min(w["x0"] for w in words))
+    if len(left) < MIN_LABEL_LINES:
+        return phrases
+    return [(LABEL_HEADER, min(left), first_x0 - 1), *phrases]
+
+
 def _find_t12_header(lines: list[list[Word]]) -> tuple[int, Phrases] | None:
     best: tuple[int, int, Phrases] | None = None
     for i, line in enumerate(lines):
@@ -96,7 +131,9 @@ def _find_t12_header(lines: list[list[Word]]) -> tuple[int, Phrases] | None:
         months = sum(1 for p in phrases if is_month_label(p[0]))
         if months >= MIN_T12_MONTH_HEADERS and (best is None or months > best[0]):
             best = (months, i, phrases)
-    return None if best is None else (best[1], best[2])
+    if best is None:
+        return None
+    return best[1], _with_label_column(lines, best[1], best[2])
 
 
 def _unique_headers(texts: list[str]) -> list[str]:
@@ -127,9 +164,9 @@ def _row_cells(
         words = per_col[col]
         bbox: Bbox = (
             min(w["x0"] for w in words),
-            min(w["top"] for w in words),
+            min(w.get("box_top", w["top"]) for w in words),
             max(w["x1"] for w in words),
-            max(w["bottom"] for w in words),
+            max(w.get("box_bottom", w["bottom"]) for w in words),
         )
         cells[headers[col]] = RawCell(" ".join(w["text"] for w in words), bbox, None)
     return cells
@@ -151,7 +188,7 @@ def _classify_rent_roll(cells: dict[str, RawCell], headers: list[str], is_repeat
     return "footnote"
 
 
-def _is_numeric_text(text: str) -> bool:
+def is_numeric_text(text: str) -> bool:
     return text in DASHES or bool(NUMERIC_CELL.match(text))
 
 
@@ -170,8 +207,10 @@ def _t12_classifier(coa: CoaConfig) -> Classifier:
         label_cell = cells.get(headers[0])
         if label_cell is None:
             return "footnote"
-        if not any(_is_numeric_text(c.text) for h, c in cells.items() if h != headers[0]):
-            return "footnote"
+        others = [c.text for h, c in cells.items() if h != headers[0]]
+        numbers = sum(1 for text in others if is_numeric_text(text))
+        if numbers == 0 or numbers < len(others) - numbers:
+            return "footnote"  # no figures, or mostly words: a note, not a line item
         if normalize_header(label_cell.text) in subtotal_labels or SUBTOTAL_LIKE.search(
             label_cell.text
         ):
@@ -181,13 +220,26 @@ def _t12_classifier(coa: CoaConfig) -> Classifier:
     return classify
 
 
+def _region_key(regions: list[Region] | None) -> list[list[float]] | None:
+    return None if regions is None else [[r.page, r.top, min(r.bottom, 1e9)] for r in regions]
+
+
+READER_VERSION = 2  # bump when the table readers change what they produce
+
+
 def _fingerprint(*parts: Any) -> str:
-    blob = json.dumps(parts, sort_keys=True, ensure_ascii=True, default=str)
+    blob = json.dumps((READER_VERSION, *parts), sort_keys=True, ensure_ascii=True, default=str)
     return hashlib.sha256(blob.encode("utf-8")).hexdigest()[:16]
 
 
 def _extract(
-    path: Path, source_file: str, find_header: HeaderFinder, classify: Classifier
+    path: Path,
+    source_file: str,
+    find_header: HeaderFinder,
+    classify: Classifier,
+    *,
+    unwrap: bool = False,
+    regions: list[Region] | None = None,
 ) -> RawTable:
     headers: list[str] = []
     header_norms: list[str] = []
@@ -200,6 +252,13 @@ def _extract(
         page_count = len(pdf.pages)
         for page_no, page in enumerate(pdf.pages, start=1):
             words = page.extract_words(keep_blank_chars=False, use_text_flow=False)
+            if regions is not None:
+                mine = [r for r in regions if r.page == page_no]
+                if not mine:
+                    continue
+                words = [w for w in words if any(r.contains(w["top"]) for r in mine)]
+            if unwrap:
+                words = unwrap_words(words)
             lines = _group_lines(words)
             width = float(page.width)
             header_idx: int | None = None
@@ -283,6 +342,8 @@ def extract_pdf_table(
     *,
     cache_dir: Path | None = None,
     source_file: str | None = None,
+    unwrap: bool = False,
+    regions: list[Region] | None = None,
 ) -> RawTable:
     """Extract the rent roll table from a text-layer PDF.
 
@@ -294,10 +355,15 @@ def extract_pdf_table(
     return _cached(
         path,
         name,
-        _fingerprint("rr", cfg.fields, cfg.fuzzy_min_score),
+        _fingerprint("rr", cfg.fields, cfg.fuzzy_min_score, unwrap, _region_key(regions)),
         cache_dir,
         lambda: _extract(
-            path, name, lambda lines: _find_header_line(lines, cfg), _classify_rent_roll
+            path,
+            name,
+            lambda lines: _find_header_line(lines, cfg),
+            _classify_rent_roll,
+            unwrap=unwrap,
+            regions=regions,
         ),
     )
 
@@ -308,13 +374,22 @@ def extract_pdf_t12_table(
     *,
     cache_dir: Path | None = None,
     source_file: str | None = None,
+    unwrap: bool = False,
+    regions: list[Region] | None = None,
 ) -> RawTable:
     """Extract the T-12 grid from a text-layer PDF: header = month labels, rows = ``line``."""
     name = source_file or path.name
     return _cached(
         path,
         name,
-        _fingerprint("t12", coa.subtotal_labels.model_dump()),
+        _fingerprint("t12", coa.subtotal_labels.model_dump(), unwrap, _region_key(regions)),
         cache_dir,
-        lambda: _extract(path, name, _find_t12_header, _t12_classifier(coa)),
+        lambda: _extract(
+            path,
+            name,
+            _find_t12_header,
+            _t12_classifier(coa),
+            unwrap=unwrap,
+            regions=regions,
+        ),
     )

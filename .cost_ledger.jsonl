@@ -24,3 +24,5 @@
 {"ts": "2026-11-07T21:51:26+00:00", "run_id": "20261107T215058-d8fb828a", "task": "vision_page", "model": "claude-sonnet-5-5", "input_tokens": 3433, "output_tokens": 2706, "cost_usd": "0.033926", "attempt": 1}
 {"ts": "2026-11-07T21:51:38+00:00", "run_id": "20261107T215058-d8fb828a", "task": "vision_page", "model": "claude-sonnet-5-5", "input_tokens": 3433, "output_tokens": 2670, "cost_usd": "0.033566", "attempt": 1}
 {"ts": "2026-11-07T21:51:42+00:00", "run_id": "20261107T215058-d8fb828a", "task": "coa_map", "model": "claude-sonnet-5-5", "input_tokens": 1626, "output_tokens": 367, "cost_usd": "0.006922", "attempt": 1}
+{"ts": "2026-11-07T22:38:34+00:00", "run_id": "20261107T223825-8f3fe260", "task": "coa_map", "model": "claude-haiku-5-5", "input_tokens": 2000, "output_tokens": 1035, "cost_usd": "0.0007175", "attempt": 1}
+{"ts": "2026-11-07T22:40:31+00:00", "run_id": "20261107T224021-65f24f12", "task": "coa_map", "model": "claude-haiku-5-5", "input_tokens": 1990, "output_tokens": 926, "cost_usd": "0.000662", "attempt": 1}

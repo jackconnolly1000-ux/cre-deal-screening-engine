@@ -12,24 +12,15 @@ from pathlib import Path
 from cre_screen.config import AppConfig
 from cre_screen.errors import CreScreenError
 from cre_screen.extract.proforma import load_proforma
-from cre_screen.extract.rent_roll import build_rent_roll
-from cre_screen.extract.t12 import build_t12
-from cre_screen.ingest.excel_tables import extract_excel_t12_table, extract_excel_table
-from cre_screen.ingest.pdf_tables import extract_pdf_t12_table, extract_pdf_table
-from cre_screen.ingest.raw import RawTable
 from cre_screen.ingest.reread import make_rereader
-from cre_screen.ingest.router import detect_format
-from cre_screen.mapping.coa_mapper import load_learned
 from cre_screen.mapping.cost import CostTracker
-from cre_screen.mapping.header_mapper import map_headers
 from cre_screen.mapping.llm_protocol import LLMClient
-from cre_screen.mapping.vision import vision_table
+from cre_screen.read_inputs import read_rent_roll, read_t12, rent_roll_routing
 from cre_screen.reconcile.context import CheckContext
 from cre_screen.reconcile.gate import run_gate
 from cre_screen.review import apply_data_overrides, status_overrides
 from cre_screen.schemas.deal import DealPackage
 from cre_screen.schemas.findings import Override
-from cre_screen.schemas.t12 import T12Statement
 
 logger = logging.getLogger(__name__)
 
@@ -43,36 +34,6 @@ def find_input(deal_dir: Path, stem: str, *, required: bool = True) -> Path | No
     if not found and not required:
         return None
     raise CreScreenError(f"{deal_dir.as_posix()} needs exactly one {stem}.pdf or {stem}.xlsx")
-
-
-def read_rr_table(
-    path: Path, cfg: AppConfig, sheet: str | None, cache_dir: Path, llm: LLMClient
-) -> RawTable:
-    """Rent roll to RawTable: text-layer PDF, Excel, or (via the vision model) a scanned PDF."""
-    fmt = detect_format(path)
-    if fmt == "pdf_scanned":
-        return vision_table(path, llm)
-    if fmt == "xlsx":
-        return extract_excel_table(path, cfg.rr_headers, sheet=sheet)
-    return extract_pdf_table(path, cfg.rr_headers, cache_dir=cache_dir)
-
-
-def sample_rows(table: RawTable) -> list[dict[str, str]]:
-    units = [r for r in table.rows if r.kind == "unit"][:3]
-    return [{h: c.text for h, c in r.cells.items()} for r in units]
-
-
-def _read_t12(
-    path: Path, cfg: AppConfig, llm: LLMClient, cache_dir: Path, learned_path: Path
-) -> T12Statement:
-    fmt = detect_format(path)
-    if fmt == "pdf_scanned":
-        raise CreScreenError(f"{path.name}: scanned T-12s are out of scope for v1")
-    if fmt == "xlsx":
-        table = extract_excel_t12_table(path, cfg.coa)
-    else:
-        table = extract_pdf_t12_table(path, cfg.coa, cache_dir=cache_dir)
-    return build_t12(table, cfg, llm=llm, learned=load_learned(learned_path))
 
 
 def _write_atomic(path: Path, text: str) -> None:
@@ -101,18 +62,26 @@ def run_deal(
 
     rr_path = find_input(deal_dir, "rent_roll")
     assert rr_path is not None
-    table = read_rr_table(rr_path, cfg, sheet, cache_dir, llm)
-    header_map, header_warnings = map_headers(
-        table.headers, sample_rows(table), cfg.rr_headers, llm
+    rr_routing = rent_roll_routing(rr_path, cfg)
+    rent_roll, _read = read_rent_roll(
+        rr_path, cfg, sheet=sheet, cache_dir=cache_dir, llm=llm, routing=rr_routing
     )
-    rent_roll = build_rent_roll(table, header_map, cfg, llm=llm)
-    if header_warnings:
-        rent_roll = rent_roll.model_copy(
-            update={"extraction_warnings": [*header_warnings, *rent_roll.extraction_warnings]}
-        )
 
     t12_path = find_input(deal_dir, "t12", required=False)
-    t12 = _read_t12(t12_path, cfg, llm, cache_dir, learned) if t12_path else None
+    t12 = None
+    if t12_path is not None:
+        t12, _ = read_t12(
+            t12_path,
+            cfg,
+            cache_dir=cache_dir,
+            llm=llm,
+            learned_path=learned,
+            routing=rent_roll_routing(t12_path, cfg),
+        )
+    elif rr_routing is not None and rr_routing.has_t12:
+        t12, _ = read_t12(
+            rr_path, cfg, cache_dir=cache_dir, llm=llm, learned_path=learned, routing=rr_routing
+        )
     pf_path = deal_dir / "proforma.yaml"
     proforma = load_proforma(pf_path) if pf_path.exists() else None
 

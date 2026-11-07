@@ -11,6 +11,18 @@ RowKind = Literal["unit", "subtotal", "header", "continuation", "footnote", "bla
 
 
 @dataclass(frozen=True)
+class Region:
+    """A horizontal slice of one PDF page, in points with ``top`` from the page top."""
+
+    page: int  # 1-based
+    top: float = 0.0
+    bottom: float = float("inf")
+
+    def contains(self, top: float) -> bool:
+        return self.top <= top < self.bottom
+
+
+@dataclass(frozen=True)
 class RawCell:
     text: str
     bbox: tuple[float, float, float, float] | None  # PDF only

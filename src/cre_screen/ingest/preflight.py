@@ -13,25 +13,17 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
 
+from cre_screen.config import RRHeadersConfig, load_config
 from cre_screen.ingest.render import PdfHealth, pdf_health
+from cre_screen.ingest.routing import Routing, route_pdf
 
-Severity = Literal["error", "warning"]
+Severity = Literal["error", "warning", "info"]
 
-SECTION_WORDS = {
-    "rent roll": ("rent roll",),
-    "T-12": ("t-12", "t12", "trailing 12", "trailing twelve"),
-    "pro forma": ("pro forma", "pro-forma"),
-    "photos": ("property photos",),
-    "highlights": ("investment highlights", "offering memorandum"),
-}
 PNL_WORDS = ("profit & loss", "profit and loss", "income statement", "total income", "expenses")
 PNL_TITLES = ("profit & loss", "profit and loss", "income statement")
 ROLL_WORDS = ("rent roll", "tenant", "lease start", "lease end", "move-in")
 FORWARD = ("income", "total", "expenses", "rent", "unit", "tenant", "lease")
 REVERSED = tuple(word[::-1] for word in FORWARD)
-UNIT_ROW = re.compile(r"(?m)^\s*[A-Za-z]{0,2}\d{1,4}[A-Za-z]?(?:\s|$)")
-MIN_UNIT_ROWS = 3
-PACKAGE_PAGES = 4  # a rent roll or T-12 file longer than this is probably a whole package
 
 
 @dataclass(frozen=True)
@@ -118,42 +110,13 @@ def _mirrored(name: str, text: str) -> list[Diagnostic]:
     return []
 
 
-def _package(name: str, health: PdfHealth) -> list[Diagnostic]:
-    found: dict[str, list[int]] = {}
-    for number, text in enumerate(health.texts, start=1):
-        lowered = " ".join(text.split()).lower()
-        for kind, words in SECTION_WORDS.items():
-            if any(word in lowered for word in words):
-                found.setdefault(kind, []).append(number)
-    kinds = {k: v for k, v in found.items() if k != "highlights"}
-    if health.pages > PACKAGE_PAGES and (len(kinds) >= 2 or "highlights" in found):
-        where = "; ".join(f"{k}: page {', '.join(map(str, v))}" for k, v in kinds.items())
-        return [
-            Diagnostic(
-                "multi_page_package",
-                "error",
-                name,
-                "This looks like a whole brochure, not a single document",
-                f"The file has {health.pages} pages with several kinds of content"
-                f"{f' ({where})' if where else ''}. The screen reads one rent roll and one T-12.",
-                (
-                    "Copy the rent roll pages into their own file named rent_roll.pdf.",
-                    "Copy the T-12 pages into their own file named t12.pdf.",
-                    "Upload those two files instead of the brochure.",
-                ),
-            )
-        ]
-    return []
-
-
-def _rent_roll_content(name: str, text: str, health: PdfHealth) -> list[Diagnostic]:
-    if not text.strip():
-        return []  # scanned: the vision step reads it
+def _rent_roll_content(name: str, text: str, routing: Routing) -> list[Diagnostic]:
+    if not text.strip() or routing.has_rent_roll:
+        return []  # scanned (the vision step reads it) or a unit-level table was found
     titled = any(w in text[:300] for w in PNL_TITLES)
     is_pnl = titled or (
         sum(w in text for w in PNL_WORDS) >= 2 and not any(w in text for w in ROLL_WORDS[:3])
     )
-    rows = sum(len(UNIT_ROW.findall(t)) for t in health.texts)
     if is_pnl:
         return [
             Diagnostic(
@@ -168,27 +131,28 @@ def _rent_roll_content(name: str, text: str, health: PdfHealth) -> list[Diagnost
                 ),
             )
         ]
-    if rows < MIN_UNIT_ROWS:
-        return [
-            Diagnostic(
-                "no_unit_rows",
-                "error",
-                name,
-                "No unit-level rows were found",
-                f"Only {rows} line(s) start like a unit number. Summary sheets such as a unit "
-                "mix or an income recap total the rents without listing each unit, so the "
-                "rent roll cannot be checked against them.",
-                (
-                    "Ask the seller or broker for the unit-by-unit rent roll.",
-                    "Upload that file; a unit mix table or summary page cannot be screened.",
-                ),
-            )
-        ]
-    return []
+    where = f"any of its {routing.pages} pages" if routing.pages > 1 else "it"
+    return [
+        Diagnostic(
+            "no_unit_rows",
+            "error",
+            name,
+            "No unit-level rent roll was found",
+            f"No table with one row per unit (unit number, rent, status) appears on {where}. "
+            "Summary sheets such as a unit mix or an income recap total the rents without "
+            "listing each unit, so the rent roll cannot be checked against them.",
+            (
+                "Ask the seller or broker for the unit-by-unit rent roll.",
+                "Upload that file; a unit mix table or summary page cannot be screened.",
+            ),
+        )
+    ]
 
 
-def _t12_content(name: str, text: str) -> list[Diagnostic]:
-    if text.strip() and sum(w in text for w in ROLL_WORDS) >= 3 and "total income" not in text:
+def _t12_content(name: str, text: str, routing: Routing) -> list[Diagnostic]:
+    if not text.strip() or routing.has_t12:
+        return []
+    if sum(w in text for w in ROLL_WORDS) >= 3 and "total income" not in text:
         return [
             Diagnostic(
                 "not_a_t12",
@@ -199,10 +163,42 @@ def _t12_content(name: str, text: str) -> list[Diagnostic]:
                 ("Upload the trailing-12 operating statement (income and expenses by month).",),
             )
         ]
-    return []
+    if not any(w in text for w in ("income", "expenses", "revenue")):
+        return [
+            Diagnostic(
+                "no_t12_table",
+                "error",
+                name,
+                "No T-12 was found",
+                "The file has no income and expense lines by month.",
+                ("Upload the trailing-12 operating statement (income and expenses by month).",),
+            )
+        ]
+    return []  # it talks about income and expenses; the readers get a chance at it
 
 
-def diagnose_pdf(path: Path, kind: Literal["rent_roll", "t12"]) -> list[Diagnostic]:
+def _sentence(text: str) -> str:
+    return text[:1].upper() + text[1:]
+
+
+def _routed(name: str, routing: Routing) -> list[Diagnostic]:
+    if not routing.notes:
+        return []
+    return [
+        Diagnostic(
+            "auto_routed",
+            "info",
+            name,
+            "The financial pages were picked out of this file",
+            _sentence("; ".join(routing.notes)) + ". Only those pages are read.",
+            (),
+        )
+    ]
+
+
+def diagnose_pdf(
+    path: Path, kind: Literal["rent_roll", "t12"], cfg: RRHeadersConfig | None = None
+) -> list[Diagnostic]:
     """Diagnostics for one PDF. An empty list means nothing was found."""
     name = path.name
     health = pdf_health(path)
@@ -212,44 +208,26 @@ def diagnose_pdf(path: Path, kind: Literal["rent_roll", "t12"]) -> list[Diagnost
     found += _blank(name, health)
     text = _flat(health.texts)
     found += _mirrored(name, text)
-    if found:
+    if found or not text.strip():
         return found
-    found += _package(name, health)
-    if found:
-        return found
-    found += _rent_roll_content(name, text, health) if kind == "rent_roll" else []
-    found += _t12_content(name, text) if kind == "t12" else []
-    return found
+    routing = route_pdf(path, cfg or load_config().rr_headers)
+    if kind == "rent_roll":
+        found += _rent_roll_content(name, text, routing)
+    else:
+        found += _t12_content(name, text, routing)
+    return found or _routed(name, routing)
 
 
-def _text_of(path: Path) -> str:
-    return _flat(pdf_health(path).texts)
+def preflight(
+    rent_roll: Path | None, t12: Path | None, cfg: RRHeadersConfig | None = None
+) -> list[Diagnostic]:
+    """Diagnostics for the files of one deal. Excel files and scans pass through.
 
-
-def preflight(rent_roll: Path | None, t12: Path | None) -> list[Diagnostic]:
-    """Diagnostics for the files of one deal. Excel files and scans pass through."""
+    A file only has to hold the tables it is there for: one file may serve both slots, and one
+    page may hold both tables. A diagnostic is an error only when a required table is truly absent.
+    """
     found: list[Diagnostic] = []
     for path, kind in ((rent_roll, "rent_roll"), (t12, "t12")):
         if path is not None and path.suffix.lower() == ".pdf":
-            found += diagnose_pdf(path, kind)  # type: ignore[arg-type]
-    if (
-        rent_roll is not None
-        and t12 is not None
-        and rent_roll.suffix.lower() == t12.suffix.lower() == ".pdf"
-    ):
-        a, b = _text_of(rent_roll), _text_of(t12)
-        if a and a == b:
-            found.append(
-                Diagnostic(
-                    "same_document",
-                    "error",
-                    f"{rent_roll.name} and {t12.name}",
-                    "The rent roll and the T-12 are the same document",
-                    "Both files contain exactly the same text, so one of them is the wrong file.",
-                    (
-                        "Check which document is missing from the package.",
-                        "Upload the real rent roll and T-12 as two different files.",
-                    ),
-                )
-            )
+            found += diagnose_pdf(path, kind, cfg)  # type: ignore[arg-type]
     return found

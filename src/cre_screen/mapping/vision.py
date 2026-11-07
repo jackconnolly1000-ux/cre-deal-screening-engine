@@ -11,6 +11,7 @@ from __future__ import annotations
 import base64
 import logging
 from pathlib import Path
+from typing import Literal
 
 from cre_screen.errors import CreScreenError
 from cre_screen.ingest.raw import RawCell, RawRow, RawTable, RowKind
@@ -41,7 +42,12 @@ class VisionError(CreScreenError):
 
 
 def transcribe_page(
-    pdf: Path, page: int, llm: LLMClient, *, careful: bool = False
+    pdf: Path,
+    page: int,
+    llm: LLMClient,
+    *,
+    careful: bool = False,
+    prompt: str = "vision_page",
 ) -> VisionTablePage:
     """One vision call. ``careful=True`` changes the system prompt, so it caches separately."""
     data, media_type = page_image(pdf, page, dpi=RENDER_DPI)
@@ -54,7 +60,7 @@ def transcribe_page(
                 "data": base64.b64encode(data).decode("ascii"),
             },
         },
-        {"type": "text", "text": render_prompt("vision_page")},
+        {"type": "text", "text": render_prompt(prompt)},
     ]
     return llm.structured(
         task="vision_page",
@@ -83,7 +89,7 @@ def canonical_key(
 
 
 def page_rows(
-    vp: VisionTablePage, canonical: list[str]
+    vp: VisionTablePage, canonical: list[str], kind: Literal["rent_roll", "t12"] = "rent_roll"
 ) -> list[tuple[RowKind, dict[str, str], dict[str, str]]]:
     """(kind, cells keyed by canonical header, all raw cells) for every transcribed row."""
     by_norm = {normalize_header(h): h for h in canonical}
@@ -94,19 +100,35 @@ def page_rows(
             mapped = canonical_key(key, vp.headers, canonical, by_norm)
             if mapped is not None and text.strip():
                 cells[mapped] = text.strip()
-        out.append((ROW_KINDS[row.row_kind], cells, dict(row.cells)))
+        kinds = ROW_KINDS if kind == "rent_roll" else T12_KINDS
+        out.append((kinds[row.row_kind], cells, dict(row.cells)))
     return out
 
 
-def vision_table(pdf: Path, llm: LLMClient, *, source_file: str | None = None) -> RawTable:
-    """Transcribe every page and assemble a RawTable (provenance is set by the extractor)."""
-    pages = page_count(pdf)
+T12_KINDS: dict[str, RowKind] = {**ROW_KINDS, "unit": "line"}
+
+
+def vision_table(
+    pdf: Path,
+    llm: LLMClient,
+    *,
+    source_file: str | None = None,
+    pages: list[int] | None = None,
+    kind: Literal["rent_roll", "t12"] = "rent_roll",
+) -> RawTable:
+    """Transcribe the pages and assemble a RawTable (provenance is set by the extractor).
+
+    ``pages`` limits the calls to the given 1-based pages (the routed ones); ``kind`` picks the
+    prompt and how the transcribed row kinds map to table rows.
+    """
+    wanted = pages if pages is not None else list(range(1, page_count(pdf) + 1))
+    prompt = "vision_page" if kind == "rent_roll" else "vision_t12"
     headers: list[str] = []
     rows: list[RawRow] = []
     by_page: dict[int, list[str]] = {}
     preamble: list[str] = []
-    for page in range(1, pages + 1):
-        vp = transcribe_page(pdf, page, llm)
+    for page in wanted:
+        vp = transcribe_page(pdf, page, llm, prompt=prompt)
         if not headers:
             if not vp.headers:
                 logger.warning("page %d of %s returned no headers", page, pdf.name)
@@ -114,21 +136,21 @@ def vision_table(pdf: Path, llm: LLMClient, *, source_file: str | None = None) -
             headers = _unique(vp.headers)
         by_page[page] = list(headers)
         seen_table = False
-        for kind, cells, raw in page_rows(vp, headers):
-            if page == 1 and not seen_table and kind == "footnote":
+        for row_kind, cells, raw in page_rows(vp, headers, kind):
+            if page == wanted[0] and not seen_table and row_kind == "footnote":
                 # Title lines above the table: kept as text so the as-of date can be found.
                 text = " ".join(t.strip() for t in raw.values() if t.strip()) or " ".join(raw)
                 if text.strip():
                     preamble.append(text.strip())
                 continue
-            if kind in ("unit", "header", "subtotal"):
+            if row_kind in ("unit", "line", "header", "subtotal"):
                 seen_table = True
             rows.append(
                 RawRow(
                     page,
                     None,
                     len(rows),
-                    kind,
+                    row_kind,
                     {h: RawCell(text, None, None) for h, text in cells.items()},
                 )
             )
@@ -139,7 +161,7 @@ def vision_table(pdf: Path, llm: LLMClient, *, source_file: str | None = None) -
         source_format="pdf_scanned",
         headers=headers,
         rows=rows,
-        page_count=pages,
+        page_count=page_count(pdf),
         header_texts_by_page=by_page,
         preamble_text="\n".join(preamble),
     )

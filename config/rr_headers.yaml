@@ -17,7 +17,7 @@ fields:
   concession_note: ["Concession", "Concessions", "Notes", "Comments", "Specials", "Remarks"]
 
 status_synonyms:
-  occupied: ["occupied", "occ", "o", "current", "leased", "occupied-nr"]
+  occupied: ["occupied", "occ", "o", "current", "leased", "occupied-nr", "active"]
   vacant: ["vacant", "vac", "v", "vacant-unrented", "vacant unrented"]
   notice: ["notice", "ntv", "on notice", "occupied-ntv", "notice to vacate"]
   model: ["model", "model unit"]

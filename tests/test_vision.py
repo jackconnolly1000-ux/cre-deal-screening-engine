@@ -326,7 +326,9 @@ def spec_prompt_block(name: str) -> str:
     return spec[fence : spec.index("```", fence)].strip()
 
 
-@pytest.mark.parametrize("name", ["vision_page", "header_map", "coa_map", "concession"])
+@pytest.mark.parametrize(
+    "name", ["vision_page", "vision_t12", "header_map", "coa_map", "concession"]
+)
 def test_prompt_templates_match_spec_section_14_exactly(name: str) -> None:
     template = (
         Path(__file__).resolve().parents[1]

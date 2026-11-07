@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import re
 from collections.abc import Callable
+from datetime import date
 from decimal import Decimal
 from typing import Any
 
@@ -28,6 +29,22 @@ from cre_screen.schemas.common import Provenance
 from cre_screen.schemas.rent_roll import HeaderMap, RentRoll, RentRollUnit, SubtotalRow
 
 logger = logging.getLogger(__name__)
+
+MAX_DATE_WORDS = 4
+
+
+def _leading_date(text: str) -> date | None:
+    """The date at the start of ``text``; text after it (a separator and more words) is ignored."""
+    words = text.strip().split()
+    for count in range(min(len(words), MAX_DATE_WORDS), 0, -1):
+        try:
+            found = parse_date(" ".join(words[:count]))
+        except ParseError:
+            continue
+        if found is not None:
+            return found
+    return None
+
 
 AS_OF = re.compile(r"as of[:\s]+(.+)", re.IGNORECASE)
 GRAND_TOTAL = re.compile(r"grand total|total", re.IGNORECASE)
@@ -228,10 +245,9 @@ def build_rent_roll(
     as_of = None
     match = AS_OF.search(table.preamble_text)
     if match:
-        try:
-            as_of = parse_date(match.group(1).strip())
-        except ParseError:
-            warnings.append(f"could not parse as-of date {match.group(1)!r}")
+        as_of = _leading_date(match.group(1))
+        if as_of is None:
+            warnings.append(f"could not parse as-of date {match.group(1).strip()!r}")
     if as_of is None and "no as-of date found" not in warnings:
         warnings.append("no as-of date found")
 

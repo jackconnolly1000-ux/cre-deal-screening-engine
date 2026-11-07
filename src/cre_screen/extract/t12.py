@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import logging
+import re
+from datetime import date, datetime
 from decimal import Decimal
 
 from cre_screen.config import AppConfig
-from cre_screen.errors import ParseError, T12ExtractError
+from cre_screen.errors import DateParseError, ParseError, T12ExtractError
 from cre_screen.extract.rent_roll import PROVENANCE
 from cre_screen.ingest.parse import money_was_rounded, parse_date, parse_money
 from cre_screen.ingest.pdf_tables import is_month_label
@@ -21,6 +23,33 @@ from cre_screen.schemas.t12 import StatedSubtotal, T12Line, T12Statement
 logger = logging.getLogger(__name__)
 
 ZERO = Decimal("0.00")
+YEAR = r"(20\d{2})"
+
+
+def period_end_of(last_label: str, preamble: str) -> date:
+    """Last day of the last month. A bare month name takes its year from the title text."""
+    try:
+        found = parse_date(last_label, end_of_month=True)
+    except DateParseError:
+        found = None
+    if found is not None:
+        return found
+    month = None
+    for fmt in ("%b", "%B"):
+        try:
+            month = datetime.strptime(last_label.strip(), fmt)
+            break
+        except ValueError:
+            continue
+    if month is None:
+        raise T12ExtractError(f"cannot read the last month label {last_label!r}")
+    names = f"{month:%B}|{month:%b}"
+    match = re.search(rf"(?i)\b(?:{names})\.?,?\s+{YEAR}\b", preamble)
+    if match is None:
+        raise T12ExtractError(
+            f"the month labels have no year and no '{month:%B} <year>' was found above the table"
+        )
+    return parse_date(f"{month:%b} {match.group(1)}", end_of_month=True)  # type: ignore[return-value]
 
 
 def _citation(table: RawTable, row: RawRow, cell: RawCell) -> Citation:
@@ -64,9 +93,7 @@ def build_t12(
             f"{table.source_file}: expected 12 month columns, found {len(month_headers)}"
         )
     total_header = next((h for h in table.headers if normalize_header(h) == "total"), None)
-    period_end = parse_date(month_headers[-1], end_of_month=True)
-    if period_end is None:
-        raise T12ExtractError(f"cannot read the last month label {month_headers[-1]!r}")
+    period_end = period_end_of(month_headers[-1], table.preamble_text)
 
     warnings: list[str] = []
     data_rows = [

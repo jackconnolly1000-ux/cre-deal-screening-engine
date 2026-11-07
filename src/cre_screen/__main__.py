@@ -16,15 +16,9 @@ from cre_screen import runtime
 from cre_screen.config import AppConfig, load_config
 from cre_screen.errors import BudgetExceededError, CacheMissError, CreScreenError
 from cre_screen.export.excel_writer import write_workbook
-from cre_screen.extract.rent_roll import build_rent_roll
-from cre_screen.extract.t12 import build_t12
-from cre_screen.ingest.excel_tables import extract_excel_t12_table
 from cre_screen.ingest.parse import parse_date
-from cre_screen.ingest.pdf_tables import extract_pdf_t12_table
-from cre_screen.ingest.router import detect_format
-from cre_screen.mapping.coa_mapper import load_learned
-from cre_screen.mapping.header_mapper import map_headers
-from cre_screen.pipeline import find_input, read_rr_table, run_deal, sample_rows
+from cre_screen.pipeline import find_input, run_deal
+from cre_screen.read_inputs import read_rent_roll, read_t12, rent_roll_routing
 from cre_screen.reconcile.checks import rr_footing, t12_footing
 from cre_screen.reconcile.context import CheckContext
 from cre_screen.runtime import LEARNED, REPO_ROOT, make_llm, with_overrides
@@ -57,11 +51,16 @@ def cmd_extract_rr(args: argparse.Namespace) -> int:
     deal_dir: Path = args.deal_dir
     path = find_input(deal_dir, "rent_roll")
     assert path is not None
-    table = read_rr_table(path, cfg, args.sheet, CACHE_DIR, llm)
-    header_map, header_warnings = map_headers(
-        table.headers, sample_rows(table), cfg.rr_headers, llm
+    rent_roll, read = read_rent_roll(
+        path,
+        cfg,
+        sheet=args.sheet,
+        cache_dir=CACHE_DIR,
+        llm=llm,
+        routing=rent_roll_routing(path, cfg),
     )
-    rent_roll = build_rent_roll(table, header_map, cfg, llm=llm)
+    assert read.table is not None
+    table = read.table
     as_of = _resolve_as_of(rent_roll, args.as_of)
     rent_roll = rent_roll.model_copy(update={"as_of_date": as_of})
 
@@ -72,7 +71,7 @@ def cmd_extract_rr(args: argparse.Namespace) -> int:
 
     print(f"{deal_dir.name}: {path.name} ({rent_roll.source_format}, {table.page_count} page(s))")
     print(f"Property: {rent_roll.property_name}   As of: {as_of.isoformat()}")
-    print(f"Header map: {header_map.source}")
+    print(f"Header map: {read.header_source}")
     print(f"Units found: {len(rent_roll.units)}")
     occupied_like = set(cfg.thresholds.rr_zero_rent_occ.occupied_like_statuses)
     for column in ("in_place_rent", "market_rent"):
@@ -91,7 +90,7 @@ def cmd_extract_rr(args: argparse.Namespace) -> int:
             f"{column}: stated {stated_text} | computed all units {_money(everyone)} | "
             f"computed occupied-like {_money(occupied)}"
         )
-    for warning in [*header_warnings, *rent_roll.extraction_warnings]:
+    for warning in rent_roll.extraction_warnings:
         print(f"warning: {warning}")
     failing = [f for f in findings if f.severity in ("block", "warn")]
     if failing:
@@ -112,14 +111,17 @@ def cmd_extract_t12(args: argparse.Namespace) -> int:
     deal_dir: Path = args.deal_dir
     path = find_input(deal_dir, "t12")
     assert path is not None
-    fmt = detect_format(path)
-    if fmt == "pdf_scanned":
-        raise CreScreenError(f"{path.name}: scanned T-12s are out of scope for v1")
-    if fmt == "xlsx":
-        table = extract_excel_t12_table(path, cfg.coa, sheet=args.sheet)
-    else:
-        table = extract_pdf_t12_table(path, cfg.coa, cache_dir=CACHE_DIR)
-    t12 = build_t12(table, cfg, llm=llm, learned=load_learned(LEARNED))
+    t12, read = read_t12(
+        path,
+        cfg,
+        cache_dir=CACHE_DIR,
+        llm=llm,
+        learned_path=LEARNED,
+        routing=rent_roll_routing(path, cfg),
+        sheet=args.sheet,
+    )
+    assert read.table is not None
+    table = read.table
 
     print(f"{deal_dir.name}: {path.name} ({t12.source_format}, {table.page_count} page(s))")
     print(f"Property: {t12.property_name}   Period ending: {t12.period_end.isoformat()}")

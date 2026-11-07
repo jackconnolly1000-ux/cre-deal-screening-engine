@@ -358,13 +358,12 @@ def main() -> None:
         try:
             if as_of:
                 parse_date(as_of)
-            blockers = logic.deal_diagnostics(deal_dir)
-            if blockers:
+            notices = logic.deal_diagnostics(deal_dir)
+            for item in notices:
+                shown = {"error": st.error, "warning": st.warning, "info": st.info}[item.severity]
+                shown(logic.diagnostic_markdown(item))
+            if any(item.severity == "error" for item in notices):
                 st.session_state["base_key"] = None
-                for item in blockers:
-                    (st.error if item.severity == "error" else st.warning)(
-                        logic.diagnostic_markdown(item)
-                    )
                 return
             _json, run_cost = run_pipeline(
                 str(deal_dir), logic.folder_hash(deal_dir), as_of, cache_mode
