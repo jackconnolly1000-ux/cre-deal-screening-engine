@@ -6,6 +6,7 @@ moment a value is handed to openpyxl, which SPEC section 2 allows inside ``expor
 
 from __future__ import annotations
 
+import io
 import os
 from collections import defaultdict
 from decimal import Decimal
@@ -573,4 +574,14 @@ def write_workbook(
     return path
 
 
-__all__ = ["build_workbook", "citation_comment", "write_workbook"]
+def workbook_bytes(
+    pkg: DealPackage, *, synthetic: bool = False, assumptions: Assumptions | None = None
+) -> bytes:
+    """The workbook as bytes, for a download button. Same content as ``write_workbook``."""
+    wb = build_workbook(pkg, synthetic=synthetic, assumptions=assumptions)
+    buffer = io.BytesIO()
+    ExcelWriter(wb, ZipFile(buffer, "w", ZIP_DEFLATED, allowZip64=True)).save()
+    return buffer.getvalue()
+
+
+__all__ = ["build_workbook", "citation_comment", "workbook_bytes", "write_workbook"]

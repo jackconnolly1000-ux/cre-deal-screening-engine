@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 import re
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -552,3 +553,24 @@ def test_layout_constants_agree_with_the_spec() -> None:
         40,
     )
     assert date(2026, 1, 1).year == 2026 and cite().page == 1
+
+
+# ---------- workbook bytes (the UI's download button) ----------
+
+
+def test_workbook_bytes_match_the_file_writer(packages, tmp_path: Path) -> None:
+    from cre_screen.export.excel_writer import workbook_bytes
+
+    data = workbook_bytes(packages["deal_003"], synthetic=True)
+    assert data[:2] == b"PK"
+    from_bytes = openpyxl.load_workbook(io.BytesIO(data))
+    from_file = openpyxl.load_workbook(
+        write_workbook(packages["deal_003"], tmp_path / "x.xlsx", synthetic=True)
+    )
+    assert from_bytes.sheetnames == from_file.sheetnames == list(L.SHEET_ORDER)
+    for name in L.SHEET_ORDER:
+        a = [[c.value for c in row] for row in from_bytes[name].iter_rows()]
+        b = [[c.value for c in row] for row in from_file[name].iter_rows()]
+        assert a == b, name
+    expected = packages["deal_003"].created_at.replace(tzinfo=None, microsecond=0)
+    assert from_bytes.properties.created == from_bytes.properties.modified == expected

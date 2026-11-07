@@ -195,3 +195,23 @@ def test_render_page_count_png_and_boxes(two_page_pdf) -> None:
     assert png.startswith(b"\x89PNG")
     boxed = draw_boxes(png, [(40.0, 100.0, 200.0, 120.0)], scale=1.0)
     assert boxed.startswith(b"\x89PNG") and boxed != png
+
+
+def test_draw_boxes_highlight_is_a_thick_orange_outline_on_top_of_thin_red_boxes(
+    two_page_pdf,
+) -> None:
+    import io
+
+    from PIL import Image
+
+    png = render_page_png(two_page_pdf, 1, dpi=72)
+    both = draw_boxes(
+        png, [(40.0, 100.0, 120.0, 120.0)], 1.0, highlight=[(200.0, 100.0, 300.0, 130.0)]
+    )
+    image = Image.open(io.BytesIO(both)).convert("RGB")
+    red = image.getpixel((40, 110))
+    orange_edge = image.getpixel((201, 115))
+    assert red[0] > 200 and red[1] < 60, "thin red box"
+    assert orange_edge[0] > 230 and 80 < orange_edge[1] < 190 and orange_edge[2] < 90
+    plain = draw_boxes(png, [(40.0, 100.0, 120.0, 120.0)], 1.0)
+    assert plain != both and draw_boxes(png, [], 1.0) == draw_boxes(png, [], 1.0, highlight=[])

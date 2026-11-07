@@ -28,13 +28,30 @@ def render_page_png(pdf: Path, page: int, dpi: int = 110) -> bytes:
         return pix.tobytes("png")
 
 
-def draw_boxes(png: bytes, boxes: list[tuple[float, float, float, float]], scale: float) -> bytes:
-    """Draw rectangles given in PDF points (x0, top, x1, bottom); scale = dpi / 72."""
+def draw_boxes(
+    png: bytes,
+    boxes: list[tuple[float, float, float, float]],
+    scale: float,
+    *,
+    highlight: list[tuple[float, float, float, float]] | None = None,
+) -> bytes:
+    """Draw rectangles given in PDF points (x0, top, x1, bottom); scale = dpi / 72.
+
+    ``boxes`` are thin red outlines. ``highlight`` boxes (the focused citation) are drawn last, in
+    a thick orange outline with a translucent fill, so they stand out from the rest.
+    """
     image = Image.open(io.BytesIO(png)).convert("RGB")
-    draw = ImageDraw.Draw(image)
+    draw = ImageDraw.Draw(image, "RGBA")
     for x0, top, x1, bottom in boxes:
         draw.rectangle(
-            [x0 * scale, top * scale, x1 * scale, bottom * scale], outline="red", width=2
+            [x0 * scale, top * scale, x1 * scale, bottom * scale], outline="red", width=1
+        )
+    for x0, top, x1, bottom in highlight or []:
+        draw.rectangle(
+            [x0 * scale, top * scale, x1 * scale, bottom * scale],
+            outline=(255, 120, 0, 255),
+            fill=(255, 190, 0, 70),
+            width=3,
         )
     out = io.BytesIO()
     image.save(out, format="PNG")
