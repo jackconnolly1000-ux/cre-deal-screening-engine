@@ -10,6 +10,8 @@ The model never produces a number that lands in a typed record. It maps header a
 reads concession notes, and transcribes pages that are only images. Every figure is parsed by
 code, and every check is a pure Python function. `SPEC.md` is the build contract.
 
+![CRE Deal-Screening Engine Walkthrough](demo.gif)
+
 ## Results
 
 All numbers below are copied from the report files in `evals/reports/`. Model: `claude-haiku-5-5`.
